@@ -14,7 +14,18 @@ Con toda esta información se realiza el siguiente procedimiento:
 ___
 # **Parámetros de la Reestructura**
 
-Los Parámetros son Movimientos de 
+Los Parámetros son datos que pueden ser cambiados para negociar la reestructura, incluyendo:
+- **Fecha de Pago Inicial**: El Primer pago que realizará el cliente (en body)
+- **Nuevo Apartado Mensual**: El nuevo AM del cliente (en body)
+- **Valor de Pago Inicial**: El Monto del primer pago que realizará el cliente (en body)
+- **Descuento Condonado?**: (en sidebar)
+
+___
+# **Alertas**
+
+Se producirá una alerta bajo los siguientes casos:
+- **Pago a Banco Faltante**: Existe una factura con destino al banco que no se realizó antes (en sidebar)
+- **Plazo mayor a x Meses**: El Plazo de la reestructura excede lo convencional (en sidebar)
 
 ___
 # **Estructura del Proyecto**
@@ -27,4 +38,3 @@ El proyecto esta dividido bajo la siguiente estructura:
 - **src/utils**: Funciones de Ayuda
 - **src/ui**: Componentes de Visualización de Streamlit
 
-Por favor no romper la estructura
