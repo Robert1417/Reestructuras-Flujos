@@ -21,7 +21,8 @@ jobs:
       - name: Instalar dependencias
         run: |
           pip install -r requirements.txt
-          pip install papermill nbconvert
+          pip install papermill nbconvert ipykernel
+          python -m ipykernel install --user --name python3
 
       - name: Ejecutar Notebook
         env:
