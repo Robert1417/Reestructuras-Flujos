@@ -1,4 +1,4 @@
-name: Ejecutar Flujo Diario
+name: Reestructuras - Actualización de Datos
 
 permissions:
   contents: write
@@ -21,11 +21,19 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache Pip Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Instalar dependencias
         run: |
-          pip install -r requirements.txt
-          pip install papermill nbconvert ipykernel
-          python -m ipykernel install --user --name python3
+          python -m pip install --upgrade pip
+          pip install nbconvert ipykernel
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Ejecutar Notebook
         env:
