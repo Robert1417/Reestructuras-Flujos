@@ -15,6 +15,7 @@ ___
 # **Parámetros de la Reestructura**
 
 Los Parámetros son datos que pueden ser cambiados para negociar la reestructura, incluyendo:
+- **Referencia**: La Referencia del Cliente al Cúal se le va a realizar la Reestructura
 - **Fecha de Pago Inicial**: El Primer pago que realizará el cliente (en body)
 - **Nuevo Apartado Mensual**: El nuevo AM del cliente (en body)
 - **Valor de Pago Inicial**: El Monto del primer pago que realizará el cliente (en body)
