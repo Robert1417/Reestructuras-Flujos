@@ -1,0 +1,55 @@
+# Clase para Controlar los Diferentes Flujos de las Mensualidades
+
+# Librerias Necesarias
+import pandas as pd
+
+# Importamos el Logger
+from calculator.app import debugLogger
+
+# Creamos la Clase de FlujoMensualidades
+class FlujoMensualidades:
+    # Clase Auxiliar para Guardar cada Mensualidad Individual
+    class Mensualidad:
+        def __init__(self, fecha: pd.Timestamp, monto: float):
+            self.fecha = fecha
+            self.monto = monto
+    
+    # La Clase se inicializa con un DataFrame de Mensualidades, el cual se convierte en una lista de Objetos Mensualidad para facilitar su manejo
+    def __init__(self,ref: str, dfMensualidades: pd.DataFrame):
+        self.ref = ref
+        self.mensualidades = []
+        # Ordenamos el DataFrame por Fecha para asegurar que el Flujo se maneje en orden cronológico
+        dfMensualidades = dfMensualidades.sort_values(by='Fecha_Mensualidad')
+
+        for index, row in dfMensualidades.iterrows():
+            mensualidad = self.Mensualidad(row['Fecha_Mensualidad'], row['Monto_Mensualidad'])
+            self.mensualidades.append(mensualidad)
+        
+        # Hacemos Registro de Log
+        debugLogger.info(f"FlujoMensualidades inicializado con {len(self.mensualidades)} mensualidades para la referencia {self.ref}.")
+
+    # Método para Obtener todas las Mensualidades como un DataFrame
+    def getMensualidadesDF(self) -> pd.DataFrame:
+        data = {
+            'Fecha_Mensualidad': [mensualidad.fecha for mensualidad in self.mensualidades],
+            'Monto_Mensualidad': [mensualidad.monto for mensualidad in self.mensualidades]
+        }
+        debugLogger.info(f"DataFrame de mensualidades generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
+        return pd.DataFrame(data)
+
+    # Método para Obtener las Mensualidades menores a una Fecha dada
+    def getMensualidadesMenoresFecha(self, fechaLimite: pd.Timestamp) -> pd.DataFrame:
+        mensualidadesFiltradas = [mensualidad for mensualidad in self.mensualidades if mensualidad.fecha < fechaLimite]
+
+        data = {
+            'Fecha_Mensualidad': [mensualidad.fecha for mensualidad in mensualidadesFiltradas],
+            'Monto_Mensualidad': [mensualidad.monto for mensualidad in mensualidadesFiltradas]
+        }
+        debugLogger.info(f"DataFrame de mensualidades menores a {fechaLimite} generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
+        return pd.DataFrame(data)
+
+    # Método para Obtener el Monto Total de las Mensualidades
+    def getMontoTotal(self) -> float:
+        montoTotal = sum(mensualidad.monto for mensualidad in self.mensualidades)
+        debugLogger.info(f"Monto total de mensualidades calculado: {montoTotal} para la referencia {self.ref}.")
+        return montoTotal

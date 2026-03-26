@@ -1,0 +1,31 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "simple": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        }
+    },
+    "handlers": {
+        "stdout": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+            "stream": "ext://sys.stdout"
+        },
+        "file": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "formatter": "simple",
+            "filename": "./src/calculator/logging/calculator_debug.log",
+            "when": "D",                
+            "interval": 1,              
+            "backupCount": 3,           
+            "encoding": "utf-8"
+        }
+    },
+    "loggers": {
+        "calculator_debug": {            
+            "handlers": ["stdout", "file"],
+            "propagate": false
+        }
+    }
+}
