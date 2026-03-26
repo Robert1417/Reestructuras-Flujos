@@ -26,8 +26,8 @@ class FlujoBerex:
         def to_dict(self):
             return {
                 'Fecha_Pago_Berex': self.fecha,
-                'amount': self.monto,
-                'destination': self.destino,
+                'Monto_Berex': self.monto,
+                'Destino': self.destino,
                 'Pago': self.pago,
             }
 
@@ -41,10 +41,10 @@ class FlujoBerex:
         self.facturas = []
         # Ordenamos el DataFrame por Fecha y Destino para asegurar que el Flujo se maneje en orden cronológico
         if dfFacturas is not None:
-            dfFacturas = dfFacturas.sort_values(by=['Fecha_Pago_Berex','destination'])
+            dfFacturas = dfFacturas.sort_values(by=['Fecha_Pago_Berex','Destination'])
 
             for index, row in dfFacturas.iterrows():
-                factura = self.Factura(row['Fecha_Pago_Berex'], row['amount'], row['destination'], row['Pago'])
+                factura = self.Factura(row['Fecha_Pago_Berex'], row['Monto_Berex'], row['Destino'], row['Pago'])
                 self.facturas.append(factura)
             
             # Hacemos Registro de Log
@@ -64,8 +64,8 @@ class FlujoBerex:
     def getFacturasDF(self) -> pd.DataFrame:
         data = {
             'Fecha_Pago_Berex': [factura.fecha for factura in self.facturas],
-            'amount': [factura.monto for factura in self.facturas],
-            'destination': [factura.destino for factura in self.facturas],
+            'Monto_Berex': [factura.monto for factura in self.facturas],
+            'Destino': [factura.destino for factura in self.facturas],
             'Pago': [factura.pago for factura in self.facturas],
         }
         debugLogger.info(f"DataFrame de facturas generado con {len(data['Fecha_Pago_Berex'])} filas para la referencia {self.ref}.")
@@ -110,8 +110,8 @@ class FlujoBerex:
 
         data = {
             'Fecha_Pago_Berex': [factura.fecha for factura in facturasNoPagadas],
-            'amount': [factura.monto for factura in facturasNoPagadas],
-            'destination': [factura.destino for factura in facturasNoPagadas],
+            'Monto_Berex': [factura.monto for factura in facturasNoPagadas],
+            'Destino': [factura.destino for factura in facturasNoPagadas],
             'Pago': [factura.pago for factura in facturasNoPagadas],
         }
         debugLogger.info(f"DataFrame de facturas no pagadas generado con {len(data['Fecha_Pago_Berex'])} filas para la referencia {self.ref}.")

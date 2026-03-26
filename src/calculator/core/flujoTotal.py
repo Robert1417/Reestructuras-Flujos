@@ -53,6 +53,9 @@ class FlujoTotal:
         # Creamos Variable Auxiliar de Fecha Actual, la cual se irá actualizando en cada iteración para obtener el monto de la mensualidad correspondiente a ese mes
         fecha_actual = fecha_inicio_pago
 
+        # Mantenemos el Valor Original del Nuevo dia de pago
+        nuevo_dia_pago = fecha_inicio_pago.day
+
         # Paso 3: Comenzar la Iteración para crear el Nuevo Flujo Total con la Reestructura
         while monto_total_no_pagado_comision > 0 or monto_total_no_pagado_banco > 0:
             apartadoEsteMes = nuevo_apartado_mensual
@@ -115,7 +118,7 @@ class FlujoTotal:
             # Primero obtenemos el último día del próximo mes
             lastDayNextMonth = pd.Timestamp(year=año_actual, month=mes_actual, day=1) + pd.offsets.MonthEnd(1)
             # Luego actualizamos la fecha actual al Mínimo entre el mismo día del próximo mes y el último día del próximo mes
-            nuevoDia = min(fecha_actual.day, lastDayNextMonth.day)
+            nuevoDia = min(nuevo_dia_pago, lastDayNextMonth.day)
             fecha_actual = pd.Timestamp(year=contador_meses // 12, month=contador_meses % 12 + 1, day=nuevoDia)
             debugLogger.debug('Fecha actualizada para la siguiente iteración: {}'.format(fecha_actual))
 
@@ -165,6 +168,14 @@ class FlujoTotal:
         resultDF, anyPagoBanco = self._calcularNuevoFlujoTotal(nuevo_apartado_mensual, nuevo_pago_inicial, fecha_inicio_pago)
         debugLogger.debug('Nuevo flujo total calculado para la referencia {}'.format(self.ref))
         return resultDF, anyPagoBanco
+
+    # Método para Obtener el Nuevo Flujo de Berex, el cual se usará para mostrar el nuevo flujo en la Página Principal de la Calculadora
+    def getNuevoFlujoBerex(self) -> FlujoBerex:
+        if self.newFlowCalculated:
+            return self.nuevoFlujoBerex
+        else:
+            notInfinteLog('nuevo_flujo_no_calculado', 'El nuevo flujo de Berex para la referencia {} no ha sido calculado aún. No se puede obtener el nuevo flujo.'.format(self.ref), method='warning')
+            return pd.DataFrame() # Devolvemos un DataFrame Vacío si el Nuevo Flujo no ha sido Calculado aún
 
     # Método para saber si el Nuevo Flujo es Viable, es decir, la cantidad de facturas es menor a 9
     def isNuevoFlujoViable(self) -> bool:

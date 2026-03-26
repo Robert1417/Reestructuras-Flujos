@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 
 # Librerías para Estructura de Código
-from typing import Tuple, Any
+from typing import Tuple, Any, Callable
 
 # Importamos el Logger de Debugging
 from src.calculator.app import debugLogger
@@ -40,6 +40,10 @@ def initializeSessionState(key: str, value) -> None:
         st.session_state[key] = value
         notInfinteLog(f'initialized_{key}', f'Session state inicializado: {key} = {value}', method='debug')
 
+# Función Auxiliar para saber si un Session State está definido
+def isSessionStateDefined(key: str) -> bool:
+    return key in st.session_state
+
 # Función Auxiliar para Actualizar un Session State
 def updateSessionState(key: str, value: Any) -> None:
     try:
@@ -47,6 +51,10 @@ def updateSessionState(key: str, value: Any) -> None:
     except Exception as e:
         notInfinteLog('error_updating_session_state', f'Error al actualizar session state: {e}', method='error')
         raise e
+
+# Función Auxiliar para Obtener un Session State con un Valor por Defecto si no está definido
+def getSessionStateWithDefault(key: str, default_value_fun: Callable[[], Any]) -> Any:
+    return st.session_state.get(key, default_value_fun())
 
 # Función Auxiliar para Obtener un Session State
 def getSessionState(key: str) -> Any:
@@ -105,6 +113,7 @@ def cleanMoras(dfMoras: pd.DataFrame) -> pd.DataFrame:
         dfMoras['amount'] = dfMoras['amount'].astype(float)
         dfMoras['Referencia'] = dfMoras['Referencia'].apply(cleanReferencia)
         dfMoras['Pago'] = dfMoras['Pago'].astype(float)
+        dfMoras.rename(columns={'amount': 'Monto_Berex', 'destination': 'Destino'}, inplace=True)
         # Imputamos NaNs en la columna de Pago con el valor de 0.0
         imputeNans(dfMoras, 'Pago', 0.0)
         notInfinteLog('cleaned_moras', 'Datos de moras limpiados correctamente', method='debug')
@@ -118,12 +127,10 @@ def cleanFlujoBerex(dfFlujo: pd.DataFrame) -> pd.DataFrame:
     # Limpiamos los Datos del Flujo de Berex para Asegurar que estén en el Formato Correcto
     try:
         dfFlujo['Fecha_Pago_Berex'] = pd.to_datetime(dfFlujo['Fecha_Pago_Berex'])
-        dfFlujo['amount'] = dfFlujo['amount'].astype(float)
+        dfFlujo['Monto_Berex'] = dfFlujo['Monto_Berex'].astype(float)
         dfFlujo['Pago'] = dfFlujo['Pago'].astype(float)
-        # Se dejan solo Columnas de: Referencia, Fecha_Origen, Fecha_Pago_Berex, amount,destination
-        dfFlujo = dfFlujo[['Referencia', 'Fecha_Origen', 'Fecha_Pago_Berex', 'amount', 'destination']].copy()
-        # Renombramos la columna de amount a Monto_Berex, destination a Destino para mayor claridad
-        dfFlujo.rename(columns={'amount': 'Monto_Berex', 'destination': 'Destino'}, inplace=True)
+        # Se dejan solo Columnas de: Referencia, Fecha_Origen, Fecha_Pago_Berex, Monto_Berex,Destination
+        dfFlujo = dfFlujo[['Referencia', 'Fecha_Origen', 'Fecha_Pago_Berex', 'Monto_Berex', 'Destino']].copy()
         notInfinteLog('cleaned_flujo_berex', 'Datos del flujo de Berex limpiados correctamente', method='debug')
         return dfFlujo
     except Exception as e:
@@ -146,11 +153,12 @@ def cleanMensualidades(dfMensualidades: pd.DataFrame) -> pd.DataFrame:
 
 # Función Auxiliar para Cargar los Datos guardados localmente
 # Los Datos que carga son: moras.parquet y mensualidades.parquet
-def loadData() -> Tuple[pd.DataFrame, pd.DataFrame]:
+@st.cache_data(show_spinner=False)
+def loadData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     try:
         # Cargamos Datos de Moras y Mensualidades
-        moras = pd.read_parquet('data/moras.parquet')
-        mensualidades = pd.read_parquet('data/mensualidades.parquet')
+        moras = pd.read_parquet('src/calculator/data/moras.parquet')
+        mensualidades = pd.read_parquet('src/calculator/data/mensualidades.parquet')
         notInfinteLog('loaded_data', 'Datos cargados correctamente', method='debug')
         # Limpiamos los DFs
         moras = cleanMoras(moras)
@@ -159,4 +167,38 @@ def loadData() -> Tuple[pd.DataFrame, pd.DataFrame]:
         return moras, mensualidades, flujoBerex
     except Exception as e:
         notInfinteLog('error_loading_data', f'Error al cargar los datos: {e}', method='error')
+        raise e
+
+# Función Auxiliar para cargar los datos de prueba de la calculadora
+@st.cache_data(show_spinner=False)
+def loadTestData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    try:
+        # Cargamos Datos de Moras y Mensualidades
+        moras = pd.read_parquet('src/calculator/data/test/test_berex.parquet')
+        mensualidades = pd.read_parquet('src/calculator/data/test/test_mensualidades.parquet')
+        notInfinteLog('loaded_test_data', 'Datos de prueba cargados correctamente', method='debug')
+        # Limpiamos los DFs
+        moras = cleanMoras(moras)
+        mensualidades = cleanMensualidades(mensualidades)
+        flujoBerex = cleanFlujoBerex(moras) # El flujo de Berex se obtiene a partir de las moras, por lo que se limpia con la función de limpieza de flujo de Berex
+        return moras, mensualidades, flujoBerex
+    except Exception as e:
+        notInfinteLog('error_loading_test_data', f'Error al cargar los datos de prueba: {e}', method='error')
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+
+# --- Métricas y Cálculos ---
+
+# Función Auxiliar para Calcular Métricas Clave del Flujo de Berex: Total Pagado, Total Monto Berex y Porcentaje Pagado
+def calcMetricasFlujo(dfFlujo: pd.DataFrame) -> Tuple[float, float, float]:
+    try:
+        # Calculamos el Total Pagado en el Flujo de Berex
+        totalPagado = dfFlujo['Pago'].sum()
+        # Calculamos el Total del Monto de Berex en el Flujo de Berex
+        totalMontoBerex = dfFlujo['Monto_Berex'].sum()
+        # Calculamos el Porcentaje Pagado del Monto de Berex en el Flujo de Berex
+        porcentajePagado = (totalPagado / totalMontoBerex) * 100 if totalMontoBerex > 0 else 0.0
+        notInfinteLog('calculated_flujo_metrics', f'Métricas del flujo calculadas correctamente: Total Pagado = {totalPagado}, Total Monto Berex = {totalMontoBerex}, Porcentaje Pagado = {porcentajePagado:.2f}%', method='debug')
+        return totalPagado, totalMontoBerex, porcentajePagado
+    except Exception as e:
+        notInfinteLog('error_calculating_flujo_metrics', f'Error al calcular las métricas del flujo: {e}', method='error')
         raise e
