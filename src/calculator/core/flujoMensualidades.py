@@ -47,9 +47,31 @@ class FlujoMensualidades:
         }
         debugLogger.info(f"DataFrame de mensualidades menores a {fechaLimite} generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
         return pd.DataFrame(data)
+    
+    # Método para Obtener las Mensualidades mayores o iguales a una Fecha dada
+    def getMensualidadesMayoresIgualesFecha(self, fechaLimite: pd.Timestamp) -> pd.DataFrame:
+        mensualidadesFiltradas = [mensualidad for mensualidad in self.mensualidades if mensualidad.fecha >= fechaLimite]
+
+        data = {
+            'Fecha_Mensualidad': [mensualidad.fecha for mensualidad in mensualidadesFiltradas],
+            'Monto_Mensualidad': [mensualidad.monto for mensualidad in mensualidadesFiltradas]
+        }
+        debugLogger.info(f"DataFrame de mensualidades mayores o iguales a {fechaLimite} generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
+        return pd.DataFrame(data)
 
     # Método para Obtener el Monto Total de las Mensualidades
     def getMontoTotal(self) -> float:
         montoTotal = sum(mensualidad.monto for mensualidad in self.mensualidades)
         debugLogger.info(f"Monto total de mensualidades calculado: {montoTotal} para la referencia {self.ref}.")
         return montoTotal
+
+    # Método para Obtener las Mensualidades de un Mes y Año Específicos
+    def getMensualidadesMesAno(self, mes: int, ano: int) -> pd.DataFrame:
+        mensualidadesFiltradas = [mensualidad for mensualidad in self.mensualidades if mensualidad.fecha.month == mes and mensualidad.fecha.year == ano]
+
+        data = {
+            'Fecha_Mensualidad': [mensualidad.fecha for mensualidad in mensualidadesFiltradas],
+            'Monto_Mensualidad': [mensualidad.monto for mensualidad in mensualidadesFiltradas]
+        }
+        debugLogger.info(f"DataFrame de mensualidades para el mes {mes} y año {ano} generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
+        return pd.DataFrame(data)

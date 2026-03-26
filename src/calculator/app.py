@@ -1,9 +1,10 @@
 import streamlit as st
 import logging
+import logging.config
 import json
 
-# Le agregamos las Configuraciones de core/config/loggerConfig.json
-with open('core/config/loggerConfig.json', 'r') as f:
+# Le agregamos las Configuraciones de src/calculator/logging/config.json
+with open('src/calculator/logging/config.json', 'r') as f:
     config = json.load(f)
     logging.config.dictConfig(config)
 
