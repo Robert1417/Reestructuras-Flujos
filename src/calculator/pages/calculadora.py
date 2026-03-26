@@ -5,10 +5,13 @@ import streamlit as st
 import pandas as pd
 
 # Librerías de Ayuda
-from src.calculator.utils.helpers import loadData, updateSessionState,areSessionStatesValid
+from src.calculator.utils.helpers import updateSessionState,areSessionStatesValid
 
 # Importamos el Logger
 from src.calculator.app import debugLogger
+
+# Configuramos el Nombre de Esta Página a Calculadora
+st.set_page_config(page_title="Calculadora", page_icon=":calculator:", layout="wide")
 
 # --- Carga de Datos ---
 # Actualizamos el Session State de accion_user a False para Evitar Logs Innecesarios
@@ -67,6 +70,19 @@ st.title("Calculadora de Reestructuras")
 
 # Vamos a Mostrar el Antiguo Flujo de Berex del Cliente
 st.header("Flujo Actual de Berex")
+
+# Añadimos un Divisor
+st.divider()
+
+# Definimos si el Flujo ya esta calculado
+flujo_calculado = areSessionStatesValid(['cliente_ref','fecha_inicio_pago','nuevo_apartado_mensual','nuevo_pago_inicial'])
+
+if flujo_calculado:
+    st.success("Flujo calculado correctamente. Desplázate hacia abajo para ver el nuevo flujo con la reestructura.")
+    # Agregamos otro Título de Nuevo Flujo Calculado
+    st.header("Nuevo Flujo Calculado con Reestructura")
+else:
+    st.warning("Por favor, completa todos los campos en el sidebar para calcular el flujo.")
 
 # Actualizamos de nuevo el Session State de accion_user a False
 # Esto se realiza para que solo en los frames que existe una acción se muestren los logs

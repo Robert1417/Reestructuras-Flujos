@@ -75,3 +75,15 @@ class FlujoMensualidades:
         }
         debugLogger.info(f"DataFrame de mensualidades para el mes {mes} y año {ano} generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
         return pd.DataFrame(data)
+
+    # Método para Obtener el Monto de las Mensualidades de un Mes y Año Específicos
+    def getMontoMensualidadesMesAno(self, mes: int, ano: int) -> float:
+        montoMensualidades = sum(mensualidad.monto for mensualidad in self.mensualidades if mensualidad.fecha.month == mes and mensualidad.fecha.year == ano)
+        debugLogger.info(f"Monto total de mensualidades para el mes {mes} y año {ano} calculado: {montoMensualidades} para la referencia {self.ref}.")
+        return montoMensualidades
+
+    # Método para Obtener el Monto de las Mensualidades Menores a un Mes y Año Específicos
+    def getMontoMensualidadesMenoresMesAno(self, mes: int, ano: int) -> float:
+        montoMensualidades = sum(mensualidad.monto for mensualidad in self.mensualidades if (mensualidad.fecha.year < ano) or (mensualidad.fecha.year == ano and mensualidad.fecha.month <= mes))
+        debugLogger.info(f"Monto total de mensualidades menores al mes {mes} y año {ano} calculado: {montoMensualidades} para la referencia {self.ref}.")
+        return montoMensualidades

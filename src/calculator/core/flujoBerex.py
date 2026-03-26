@@ -2,6 +2,7 @@
 # de Berex (pagos del cliente sostenidos en el tiempo)
 
 # Librerías Neceasarias
+from typing import Tuple
 import pandas as pd
 
 # Importamos el Logger
@@ -35,18 +36,29 @@ class FlujoBerex:
             return pd.DataFrame([self.to_dict()])
     
     # La Clase se inicializa con un DataFrame de Facturas, el cual se convierte en una lista de Objetos Factura para facilitar su manejo
-    def __init__(self,ref: str, dfFacturas: pd.DataFrame):
+    def __init__(self,ref: str, dfFacturas: pd.DataFrame|None):
         self.ref = ref
         self.facturas = []
         # Ordenamos el DataFrame por Fecha y Destino para asegurar que el Flujo se maneje en orden cronológico
-        dfFacturas = dfFacturas.sort_values(by=['Fecha_Pago_Berex','destination'])
+        if dfFacturas is not None:
+            dfFacturas = dfFacturas.sort_values(by=['Fecha_Pago_Berex','destination'])
 
-        for index, row in dfFacturas.iterrows():
-            factura = self.Factura(row['Fecha_Pago_Berex'], row['amount'], row['destination'], row['Pago'])
-            self.facturas.append(factura)
-        
-        # Hacemos Registro de Log
-        debugLogger.info(f"FlujoBerex inicializado con {len(self.facturas)} facturas para la referencia {self.ref}.")
+            for index, row in dfFacturas.iterrows():
+                factura = self.Factura(row['Fecha_Pago_Berex'], row['amount'], row['destination'], row['Pago'])
+                self.facturas.append(factura)
+            
+            # Hacemos Registro de Log
+            debugLogger.info(f"FlujoBerex inicializado con {len(self.facturas)} facturas para la referencia {self.ref}.")
+        else:
+            debugLogger.warning(f"FlujoBerex inicializado sin facturas para la referencia {self.ref}.")
+
+    # Método para Agregar una Nueva Factura al Flujo de Berex
+    def agregarFactura(self, fecha: pd.Timestamp, monto: float, destino: str, pago: float = 0.0) -> None:
+        nuevaFactura = self.Factura(fecha, monto, destino, pago)
+        self.facturas.append(nuevaFactura)
+        # Ordenamos la lista de facturas por fecha y destino para mantener el orden cronológico del flujo
+        self.facturas.sort(key=lambda x: (x.fecha, x.destino))
+        debugLogger.info(f"Nueva factura agregada al flujo de Berex para la referencia {self.ref}: {nuevaFactura}")
 
     # Método para obtener todas las Facturas como un DataFrame
     def getFacturasDF(self) -> pd.DataFrame:
@@ -106,7 +118,7 @@ class FlujoBerex:
         return pd.DataFrame(data)
 
     # Método para Obtener la Última Factura sin Pagar dado un Monto Pagado
-    def getUltimaFacturaNoPagada(self, montoPagado: float):
+    def getUltimaFacturaNoPagada(self, montoPagado: float) -> Tuple[Factura,float]:
         montoAcumulado = 0.0
         ultimaFacturaNoPagada = None
 
@@ -114,6 +126,7 @@ class FlujoBerex:
             montoAcumulado += factura.monto
             if montoAcumulado > montoPagado:
                 ultimaFacturaNoPagada = factura
+                ultimoValorNoPago = montoAcumulado - montoPagado
                 break
 
         if ultimaFacturaNoPagada:
@@ -121,4 +134,30 @@ class FlujoBerex:
         else:
             debugLogger.info(f"No se encontraron facturas no pagadas para la referencia {self.ref} con el monto pagado de {montoPagado}.")
 
-        return ultimaFacturaNoPagada
+        return ultimaFacturaNoPagada, ultimoValorNoPago
+
+    # Método para Obtener el Monto Total No Pagado con Destino == 'bank'
+    def getMontoNoPagadoBanco(self) -> float:
+        montoAcumulado = 0
+        montoNoPagadoBanco = 0
+        montoPagado = self.getMontoPagado()
+        for factura in self.facturas:
+            montoAcumulado += factura.monto
+            if montoAcumulado > montoPagado and factura.destino == 'bank':
+                montoNoPagadoBanco += factura.monto
+
+        debugLogger.info(f"Monto no pagado con destino a banco calculado: {montoNoPagadoBanco} para la referencia {self.ref}.")
+        return montoNoPagadoBanco
+
+    # Método para Obtener el Monto Total No Pagado con Destino == 'commission'
+    def getMontoNoPagadoCommission(self) -> float:
+        montoAcumulado = 0
+        montoNoPagadoCommission = 0
+        montoPagado = self.getMontoPagado()
+        for factura in self.facturas:
+            montoAcumulado += factura.monto
+            if montoAcumulado > montoPagado and factura.destino == 'commission':
+                montoNoPagadoCommission += factura.monto
+
+        debugLogger.info(f"Monto no pagado con destino a comisión calculado: {montoNoPagadoCommission} para la referencia {self.ref}.")
+        return montoNoPagadoCommission

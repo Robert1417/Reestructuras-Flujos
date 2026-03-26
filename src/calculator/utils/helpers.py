@@ -120,6 +120,10 @@ def cleanFlujoBerex(dfFlujo: pd.DataFrame) -> pd.DataFrame:
         dfFlujo['Fecha_Pago_Berex'] = pd.to_datetime(dfFlujo['Fecha_Pago_Berex'])
         dfFlujo['amount'] = dfFlujo['amount'].astype(float)
         dfFlujo['Pago'] = dfFlujo['Pago'].astype(float)
+        # Se dejan solo Columnas de: Referencia, Fecha_Origen, Fecha_Pago_Berex, amount,destination
+        dfFlujo = dfFlujo[['Referencia', 'Fecha_Origen', 'Fecha_Pago_Berex', 'amount', 'destination']].copy()
+        # Renombramos la columna de amount a Monto_Berex, destination a Destino para mayor claridad
+        dfFlujo.rename(columns={'amount': 'Monto_Berex', 'destination': 'Destino'}, inplace=True)
         notInfinteLog('cleaned_flujo_berex', 'Datos del flujo de Berex limpiados correctamente', method='debug')
         return dfFlujo
     except Exception as e:
@@ -151,7 +155,8 @@ def loadData() -> Tuple[pd.DataFrame, pd.DataFrame]:
         # Limpiamos los DFs
         moras = cleanMoras(moras)
         mensualidades = cleanMensualidades(mensualidades)
-        return moras, mensualidades
+        flujoBerex = cleanFlujoBerex(moras) # El flujo de Berex se obtiene a partir de las moras, por lo que se limpia con la función de limpieza de flujo de Berex
+        return moras, mensualidades, flujoBerex
     except Exception as e:
         notInfinteLog('error_loading_data', f'Error al cargar los datos: {e}', method='error')
         raise e
