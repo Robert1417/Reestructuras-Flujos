@@ -45,9 +45,11 @@ def isSessionStateDefined(key: str) -> bool:
     return key in st.session_state
 
 # Función Auxiliar para Actualizar un Session State
-def updateSessionState(key: str, value: Any) -> None:
+def updateSessionState(key: str, value: Any) -> bool:
     try:
+        originalValue = st.session_state.get(key, None)
         st.session_state[key] = value
+        return originalValue != value  # Retorna True si el valor fue actualizado, False si el valor no cambió
     except Exception as e:
         notInfinteLog('error_updating_session_state', f'Error al actualizar session state: {e}', method='error')
         raise e
@@ -174,8 +176,8 @@ def loadData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 def loadTestData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     try:
         # Cargamos Datos de Moras y Mensualidades
-        moras = pd.read_parquet('src/calculator/data/test/test_berex.parquet')
-        mensualidades = pd.read_parquet('src/calculator/data/test/test_mensualidades.parquet')
+        moras = pd.read_parquet('src/calculator/data/tests/test_berex.parquet')
+        mensualidades = pd.read_parquet('src/calculator/data/tests/test_mensualidades.parquet')
         notInfinteLog('loaded_test_data', 'Datos de prueba cargados correctamente', method='debug')
         # Limpiamos los DFs
         moras = cleanMoras(moras)

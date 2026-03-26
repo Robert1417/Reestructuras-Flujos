@@ -3,10 +3,11 @@ import streamlit as st
 import logging
 import logging.config
 import json
+import pandas as pd
 
 # Imports Adicionales
 from src.calculator.utils.helpers import loadTestData, getSessionStateWithDefault,isSessionStateDefined, getSessionState
-from src.calculator.ui.components import mostrarFlujo
+from src.calculator.ui.components import mostrarFlujo, mostrarParametrosEntrada, compararMetricasFlujo
 from src.calculator.core import FlujoTotal
 
 # Le agregamos las Configuraciones de src/calculator/logging/config.json
@@ -21,21 +22,33 @@ debugLogger = logging.getLogger('calculator_debug')
 st.set_page_config(page_title="Inicio",page_icon='🤖', layout="wide")
 
 # --- Carga de Datos de Prueba ---
-# Primero Verificamos si ya están cargados en el Session State para evitar recargas innecesarias
-if not isSessionStateDefined('mora_test') or not isSessionStateDefined('mensualidades_test') or not isSessionStateDefined('flujo_test'):
-    moras, mensualidades, clientes = loadTestData()
-    st.session_state['mora_test'] = moras
-    st.session_state['mensualidades_test'] = mensualidades
-    st.session_state['flujo_test'] = clientes
-    debugLogger.debug('Datos de prueba cargados y almacenados en Session State')
+# No es Necesario Realizar Cambios en la Carga de Datos de Prueba porque ya usa Cache, pero lo dejamos aquí para Mejorar la Visualización del Código
+moras, mensualidades, flujo = loadTestData()
 
-# Obtenemos el flujo de prueba desde el Session State
-flujo_test = getSessionState('flujo_test')
-berex_test = getSessionState('mora_test')
-mensualidades_test = getSessionState('mensualidades_test')
+# Ahora Cargamos los Datos de Configuracion de los Clientes Test
+with open('src/calculator/data/tests/parametros.json', 'r') as f:
+    clientesConfig = json.load(f)
 
-# Creamos la Función para crear el Flujo Total de Prueba
-crearFlujoTotalTest = lambda: FlujoTotal(berex_test, mensualidades_test)
+# --- Agregación de Datos de Sidebar
+
+# Agregamos un Control de Referencias únicas en la barra lateral
+uniqueRefs = moras['Referencia'].unique().tolist()
+cliente_ref = st.sidebar.selectbox("Selecciona la Referencia del Cliente", uniqueRefs,
+                                    index=0, help="Selecciona la Referencia del Cliente para mostrar sus datos y métricas asociadas.")
+
+# Creamos los DFs filtrados por esa referencia
+moraCliente = moras[moras['Referencia'] == cliente_ref]
+mensualidadCliente = mensualidades[mensualidades['Referencia'] == cliente_ref]
+flujoCliente = flujo[flujo['Referencia'] == cliente_ref]
+
+# Dejamos las Configuraciones del Cliente 
+clientConfigs = clientesConfig.get(cliente_ref, {})
+
+# Volvemos fecha_inicio_pago un datetime para mostrarlo como métrica
+fecha_inicio_pago = pd.to_datetime(clientConfigs.get('fecha_inicio_pago', pd.Timestamp.now()), errors='coerce')
+# Volvemos los otros parámetros numéricos para mostrarlos como métricas
+nuevo_apartado_mensual = float(clientConfigs.get('nuevo_apartado_mensual', 0))
+nuevo_pago_inicial = float(clientConfigs.get('nuevo_pago_inicial', 0))
 
 # --- Visualización de la Página
 
@@ -45,7 +58,13 @@ st.title("Bienvenido a la Calculadora de Berex")
 st.divider()
 
 # Mostramos el Flujo de Prueba utilizando el componente personalizado
-mostrarFlujo(flujo_test,"Flujo de Prueba de Berex")
+mostrarFlujo(flujoCliente,"Flujo de Prueba de Berex")
+
+# Ponemos otro Separador para Mejorar la Visualización
+st.divider()
+
+# Mostramos los Parámetros de Entrada del Cliente utilizando el componente personalizado
+mostrarParametrosEntrada(cliente_ref, fecha_inicio_pago, nuevo_apartado_mensual, nuevo_pago_inicial)
 
 # Ponemos otro Separador para Mejorar la Visualización
 st.divider()
