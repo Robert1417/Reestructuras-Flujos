@@ -40,11 +40,11 @@ cliente_ref = st.sidebar.selectbox(
 anyChange = anyChange or updateSessionState('cliente_ref', cliente_ref)
 
 # Creamos un Input de Fecha para Obtener la Fecha Inicial de Pago
-fecha_inicio_pago = st.sidebar.date_input(
+fecha_inicio_pago = pd.Timestamp(st.sidebar.date_input(
     "Ingrese la Fecha Inicial de Pago",
-    value=pd.to_datetime('today').date()
+    value=pd.Timestamp.now().date()
     )
-
+)
 # Actualizamos el Session State con la Fecha Inicial de Pago
 anyChange = anyChange or updateSessionState('fecha_inicio_pago', fecha_inicio_pago)
 
