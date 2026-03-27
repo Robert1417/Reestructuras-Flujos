@@ -41,7 +41,7 @@ class FlujoBerex:
         self.facturas = []
         # Ordenamos el DataFrame por Fecha y Destino para asegurar que el Flujo se maneje en orden cronológico
         if dfFacturas is not None:
-            dfFacturas = dfFacturas.sort_values(by=['Fecha_Pago_Berex','Destination'])
+            dfFacturas = dfFacturas.sort_values(by=['Fecha_Pago_Berex','Destino'])
 
             for index, row in dfFacturas.iterrows():
                 factura = self.Factura(row['Fecha_Pago_Berex'], row['Monto_Berex'], row['Destino'], row['Pago'])

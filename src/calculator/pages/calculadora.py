@@ -5,8 +5,8 @@ import streamlit as st
 import pandas as pd
 
 # Librerías de Ayuda
-from src.calculator.utils.helpers import updateSessionState,areSessionStatesValid, loadData, getSessionState
-from src.calculator.ui.components import mostrarParametrosEntrada, mostrarFlujo, compararMetricasFlujo
+from src.calculator.utils.helpers import updateSessionState,areSessionStatesValid, loadData, getSessionState,initializeSessionState
+from src.calculator.ui.components import mostrarParametrosEntrada, mostrarFlujo, compararMetricasFlujo, mostrarFlujoCompleto, mostrarPagoMinimoInicial
 from src.calculator.core import FlujoTotal
 
 # Configuramos el Nombre de Esta Página a Calculadora
@@ -16,6 +16,12 @@ st.set_page_config(page_title="Calculadora", page_icon=":calculator:", layout="w
 # Actualizamos el Session State de accion_user a False para Evitar Logs Innecesarios
 updateSessionState('accion_user', False)
 
+# --- Carga de Datos ---
+# Cargamos los Datos de Moras y Mensualidades utilizando la Función Cargada en helpers.py
+dfMoras, dfMensualidades, dfFlujoBerex = loadData() # No es Necesario Realizar Cambios porque ya usa Cache
+
+# Inicalizamos Session State de Referencias Únicas
+initializeSessionState('refs_unicas',dfMoras['Referencia'].unique().tolist())
 
 # --- Configuración de SideBar ---
 # Agregamos Título del SideBar
@@ -25,11 +31,9 @@ st.sidebar.title("Calculadora de Reestructuras")
 anyChange = False
 
 # Agreamos un Imput de Número para Obtener la Referencia del Cliente
-cliente_ref = st.sidebar.number_input(
+cliente_ref = st.sidebar.selectbox(
     "Ingrese la Referencia del Cliente",
-    min_value=0,
-    step=1,
-    value=0,
+    ['Seleccionar Referencia'] + st.session_state['refs_unicas']
     )
 
 # Actualizamos el Session State con la Referencia del Cliente
@@ -70,35 +74,42 @@ anyChange = anyChange or updateSessionState('nuevo_pago_inicial', nuevo_pago_ini
 if anyChange:
     updateSessionState('accion_user', True)
 
-# --- Carga de Datos ---
-# Cargamos los Datos de Moras y Mensualidades utilizando la Función Cargada en helpers.py
-dfMoras, dfMensualidades, dfFlujoBerex = loadData() # No es Necesario Realizar Cambios porque ya usa Cache
-
 # Filtramos los Datos según la Referencia del Cliente
-dfMoras = dfMoras[dfMoras['cliente_ref'] == cliente_ref]
-dfMensualidades = dfMensualidades[dfMensualidades['cliente_ref'] == cliente_ref]
-dfFlujoBerex = dfFlujoBerex[dfFlujoBerex['cliente_ref'] == cliente_ref]
-
-# Creamos el Flujo Total si dfMoras tiene datos
-if not dfMoras.empty:
-    flujo_total = FlujoTotal(dfMoras, dfMensualidades)
-else:
-    flujo_total = None
-    # Mostramos una Advertencia si no hay datos de mora para el cliente
-    st.warning("No se encontraron datos de mora para la referencia del cliente ingresada. Por favor, verifica la referencia e intenta nuevamente.")
-
+dfMoras = dfMoras[dfMoras['Referencia'] == cliente_ref]
+dfMensualidades = dfMensualidades[dfMensualidades['Referencia'] == cliente_ref]
+dfFlujoBerex = dfFlujoBerex[dfFlujoBerex['Referencia'] == cliente_ref]
 
 # --- Configuración de la Página Principal ---
 # Agregamos un Título a la Página Principal
 st.title("Calculadora de Reestructuras")
 
-# Vamos a Mostrar el Antiguo Flujo de Berex del Cliente
-st.header("Flujo Actual de Berex")
+# Creamos el Flujo Total si dfMoras tiene datos
+if not dfMoras.empty:
+    flujo_total = FlujoTotal(cliente_ref,dfMoras, dfMensualidades)
+    # Mostramos el Pago Mínimo Inicial
+    mostrarPagoMinimoInicial(dfMensualidades)
 
-# Mostramos los Parámetros de Entrada como Métricas en la Barra Lateral
-mostrarParametrosEntrada(cliente_ref, fecha_inicio_pago, nuevo_apartado_mensual, nuevo_pago_inicial)
+    # Creamos Tabs apra Mostrar Flujo Estructurado y Flujo Completo
+    tab1, tab2 = st.tabs(['Flujo de Berex', 'Flujo Completo'])
 
-# Añadimos un Divisor
+    with tab1:
+        mostrarFlujo(dfFlujoBerex, "Flujo Inicial de Berex")
+
+    with tab2:
+        # Mostramos el Flujo Completo utilizando la Función mostrarFlujoCompleto del archivo components.py
+        mostrarFlujoCompleto(dfMoras, dfMensualidades)
+
+    # Añadimos un Divisor
+    st.divider()
+
+    # Mostramos los Parámetros de Entrada como Métricas en la Barra Lateral
+    mostrarParametrosEntrada(cliente_ref, fecha_inicio_pago, nuevo_apartado_mensual, nuevo_pago_inicial)
+else:
+    flujo_total = None
+    # Mostramos una Advertencia si no hay datos de mora para el cliente
+    st.warning("Por Favor Ingresa una Referencia")
+
+
 st.divider()
 
 # Definimos si el Flujo ya esta calculado
@@ -146,9 +157,6 @@ if flujo_calculado and getSessionState('accion_user'):
 
         # Comparamos las Métricas Clave entre el Flujo Actual y el Nuevo Flujo utilizando la Función compararMetricasFlujo del archivo components.py
         compararMetricasFlujo(dfFlujoBerex, dfNuevoFlujo, "Métricas del Flujo Actual de Berex", "Métricas del Nuevo Flujo con Reestructura")
-
-else:
-    st.warning("Por favor, completa todos los campos con valores válidos en el sidebar para calcular el flujo.")
 
 # Actualizamos de nuevo el Session State de accion_user a False
 # Esto se realiza para que solo en los frames que existe una acción se muestren los logs

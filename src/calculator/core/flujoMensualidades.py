@@ -19,13 +19,13 @@ class FlujoMensualidades:
         self.ref = ref
         self.mensualidades = []
         # Ordenamos el DataFrame por Fecha para asegurar que el Flujo se maneje en orden cronológico
-        dfMensualidades = dfMensualidades.sort_values(by='Fecha_Mensualidad')
+        dfMensualidades = dfMensualidades.sort_values(by='Fecha_Facturacion')
 
         for index, row in dfMensualidades.iterrows():
             # Si la Mensualidad la Columna Status_Facturacion no es POR_COBRAR se ignora
             if row['Status_Facturacion'] != 'POR_COBRAR':
                 continue
-            mensualidad = self.Mensualidad(row['Fecha_Mensualidad'], row['Monto_Mensualidad'])
+            mensualidad = self.Mensualidad(row['Fecha_Facturacion'], row['Monto_Mensualidad'])
             self.mensualidades.append(mensualidad)
         
         # Hacemos Registro de Log
@@ -34,10 +34,10 @@ class FlujoMensualidades:
     # Método para Obtener todas las Mensualidades como un DataFrame
     def getMensualidadesDF(self) -> pd.DataFrame:
         data = {
-            'Fecha_Mensualidad': [mensualidad.fecha for mensualidad in self.mensualidades],
+            'Fecha_Facturacion': [mensualidad.fecha for mensualidad in self.mensualidades],
             'Monto_Mensualidad': [mensualidad.monto for mensualidad in self.mensualidades]
         }
-        debugLogger.info(f"DataFrame de mensualidades generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
+        debugLogger.info(f"DataFrame de mensualidades generado con {len(data['Fecha_Facturacion'])} filas para la referencia {self.ref}.")
         return pd.DataFrame(data)
 
     # Método para Obtener las Mensualidades menores a una Fecha dada
@@ -45,10 +45,10 @@ class FlujoMensualidades:
         mensualidadesFiltradas = [mensualidad for mensualidad in self.mensualidades if mensualidad.fecha < fechaLimite]
 
         data = {
-            'Fecha_Mensualidad': [mensualidad.fecha for mensualidad in mensualidadesFiltradas],
+            'Fecha_Facturacion': [mensualidad.fecha for mensualidad in mensualidadesFiltradas],
             'Monto_Mensualidad': [mensualidad.monto for mensualidad in mensualidadesFiltradas]
         }
-        debugLogger.info(f"DataFrame de mensualidades menores a {fechaLimite} generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
+        debugLogger.info(f"DataFrame de mensualidades menores a {fechaLimite} generado con {len(data['Fecha_Facturacion'])} filas para la referencia {self.ref}.")
         return pd.DataFrame(data)
     
     # Método para Obtener las Mensualidades mayores o iguales a una Fecha dada
@@ -56,10 +56,10 @@ class FlujoMensualidades:
         mensualidadesFiltradas = [mensualidad for mensualidad in self.mensualidades if mensualidad.fecha >= fechaLimite]
 
         data = {
-            'Fecha_Mensualidad': [mensualidad.fecha for mensualidad in mensualidadesFiltradas],
+            'Fecha_Facturacion': [mensualidad.fecha for mensualidad in mensualidadesFiltradas],
             'Monto_Mensualidad': [mensualidad.monto for mensualidad in mensualidadesFiltradas]
         }
-        debugLogger.info(f"DataFrame de mensualidades mayores o iguales a {fechaLimite} generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
+        debugLogger.info(f"DataFrame de mensualidades mayores o iguales a {fechaLimite} generado con {len(data['Fecha_Facturacion'])} filas para la referencia {self.ref}.")
         return pd.DataFrame(data)
 
     # Método para Obtener el Monto Total de las Mensualidades
@@ -73,10 +73,10 @@ class FlujoMensualidades:
         mensualidadesFiltradas = [mensualidad for mensualidad in self.mensualidades if mensualidad.fecha.month == mes and mensualidad.fecha.year == ano]
 
         data = {
-            'Fecha_Mensualidad': [mensualidad.fecha for mensualidad in mensualidadesFiltradas],
+            'Fecha_Facturacion': [mensualidad.fecha for mensualidad in mensualidadesFiltradas],
             'Monto_Mensualidad': [mensualidad.monto for mensualidad in mensualidadesFiltradas]
         }
-        debugLogger.info(f"DataFrame de mensualidades para el mes {mes} y año {ano} generado con {len(data['Fecha_Mensualidad'])} filas para la referencia {self.ref}.")
+        debugLogger.info(f"DataFrame de mensualidades para el mes {mes} y año {ano} generado con {len(data['Fecha_Facturacion'])} filas para la referencia {self.ref}.")
         return pd.DataFrame(data)
 
     # Método para Obtener el Monto de las Mensualidades de un Mes y Año Específicos

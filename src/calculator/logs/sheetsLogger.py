@@ -23,9 +23,12 @@ class SheetsLoggerHandler(logging.Handler):
         # Obtenemos el String de las Credenciales
         creds_info = secrets["MI_JSON"]
         # Volvemos las Credenciales en un Diccionario
-        creds = json.loads(creds_info)
+        creds = json.loads(creds_info.strip())
+        # Definimos los scopes
+        scopes = ['https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive']
         # Creamos las Credenciales de Google a Partir del Diccionario
-        credentials = Credentials.from_service_account_info(creds)
+        credentials = Credentials.from_service_account_info(creds, scopes=scopes)
 
         # Iniciamos una Cola para Almacenar los Logs que se Quieren Enviar a Sheets
         self.log_queue = queue.Queue()
@@ -49,7 +52,7 @@ class SheetsLoggerHandler(logging.Handler):
             self.worksheet = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
             print(f"Conectado a Google Sheets: {sheet_name} en {spreadsheet_id}")
         except Exception as e:
-            print(f"Error al conectar con Google Sheets: {e}")
+            print('Verificar ERRROR (VERIFICAR)\n\n')
             self.worksheet = None
     
     def format(self, record):

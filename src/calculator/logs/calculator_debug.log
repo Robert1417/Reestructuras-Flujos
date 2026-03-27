@@ -1,2 +1,30 @@
-2026-03-27 12:24:09,071 - calculator_debug - ERROR - Error al cargar los datos de prueba: [Errno 2] No such file or directory: 'src/calculator/data/tests/test_berex.parquet'
-2026-03-27 12:24:22,672 - calculator_debug - ERROR - Error al cargar los datos: [Errno 2] No such file or directory: 'src/calculator/data/moras.parquet'
+2026-03-27 14:08:35,866 - calculator_debug - ERROR - Error al cargar los datos de prueba: [Errno 2] No such file or directory: 'src/calculator/data/tests/test_berex.parquet'
+2026-03-27 14:09:21,230 - calculator_debug - ERROR - Error al cargar los datos de prueba: [Errno 2] No such file or directory: 'src/calculator/data/tests/test_berex.parquet'
+2026-03-27 14:12:05,349 - calculator_debug - ERROR - Error al cargar los datos de prueba: [Errno 2] No such file or directory: 'src/calculator/data/tests/test_berex.parquet'
+2026-03-27 14:55:42,620 - calculator_debug - ERROR - Error al cargar los datos de prueba: [Errno 2] No such file or directory: 'src/calculator/data/tests/test_berex.parquet'
+2026-03-27 14:55:47,521 - calculator_debug - ERROR - Error al cargar los datos: [Errno 2] No such file or directory: 'src/calculator/data/moras.parquet'
+2026-03-27 14:55:54,319 - calculator_debug - ERROR - Error al cargar los datos: [Errno 2] No such file or directory: 'src/calculator/data/moras.parquet'
+2026-03-27 14:58:37,576 - calculator_debug - ERROR - Error al limpiar los datos de moras: 'payment_date'
+2026-03-27 14:58:37,578 - calculator_debug - ERROR - Error al cargar los datos: 'payment_date'
+2026-03-27 15:38:10,523 - calculator_debug - ERROR - Error al cargar los datos de prueba: Could not open Parquet input source '<Buffer>': Parquet file size is 0 bytes
+2026-03-27 15:39:52,535 - calculator_debug - WARNING - Session state no válido: cliente_ref = 0
+2026-03-27 15:40:29,310 - calculator_debug - WARNING - Session state no válido: nuevo_apartado_mensual = None
+2026-03-27 15:40:52,731 - calculator_debug - WARNING - Session state no válido: nuevo_pago_inicial = None
+2026-03-27 16:36:39,449 - calculator_debug - WARNING - Session state no válido: fecha_inicio_pago = None
+2026-03-27 16:38:38,183 - calculator_debug - ERROR - Error al calcular las métricas del flujo: 'Pago'
+2026-03-27 16:39:45,879 - calculator_debug - ERROR - Error al calcular las métricas del flujo: 'Pago'
+2026-03-27 16:44:57,338 - calculator_debug - ERROR - Error al calcular las métricas del flujo: 'Pago'
+2026-03-27 16:47:15,160 - calculator_debug - WARNING - Session state no válido: nuevo_apartado_mensual = 0.0
+2026-03-27 16:47:36,238 - calculator_debug - WARNING - Session state no válido: nuevo_apartado_mensual = 0.0
+2026-03-27 16:47:39,895 - calculator_debug - WARNING - Session state no válido: nuevo_apartado_mensual = 0.0
+2026-03-27 16:48:17,177 - calculator_debug - WARNING - Session state no válido: cliente_ref = Seleccionar Referencia
+2026-03-27 16:48:25,711 - calculator_debug - WARNING - Session state no válido: nuevo_apartado_mensual = 0.0
+2026-03-27 16:50:26,896 - calculator_debug - WARNING - Session state no válido: nuevo_apartado_mensual = 0.0
+2026-03-27 16:58:12,938 - calculator_debug - WARNING - Session state no válido: nuevo_apartado_mensual = 0.0
+2026-03-27 16:59:22,609 - calculator_debug - WARNING - Session state no válido: nuevo_apartado_mensual = 0.0
+2026-03-27 17:02:24,271 - calculator_debug - WARNING - Session state no válido: nuevo_pago_inicial = 0.0
+2026-03-27 17:02:31,474 - calculator_debug - WARNING - FlujoBerex inicializado sin facturas para la referencia 3215666383.
+2026-03-27 17:03:52,318 - calculator_debug - WARNING - FlujoBerex inicializado sin facturas para la referencia 3002013538.
+2026-03-27 17:04:55,195 - calculator_debug - WARNING - Session state no válido: nuevo_pago_inicial = 0.0
+2026-03-27 17:05:02,626 - calculator_debug - WARNING - Session state no válido: cliente_ref = Seleccionar Referencia
+2026-03-27 17:06:57,005 - calculator_debug - WARNING - Session state no válido: nuevo_pago_inicial = 0.0

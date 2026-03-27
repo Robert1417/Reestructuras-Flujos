@@ -3,6 +3,7 @@
 # Librerías necesarias
 import pandas as pd
 import streamlit as st
+import numpy as np
 
 # Librerías para Estructura de Código
 from typing import Tuple, Any, Callable
@@ -29,7 +30,7 @@ def notInfinteLog(name: str, message: str, method: str = 'info') -> None:
 # --- Manejo de Session States ---
 
 defaultValues = {
-    'cliente_ref': 0,
+    'cliente_ref': 'Seleccionar Referencia',
     'nuevo_apartado_mensual': 0.0,
     'nuevo_pago_inicial': 0.0,
 }
@@ -111,7 +112,7 @@ def imputeNans(df: pd.DataFrame, col: str, value) -> None:
 def cleanMoras(dfMoras: pd.DataFrame) -> pd.DataFrame:
     # Limpiamos los Datos de Moras para Asegurar que estén en el Formato Correcto
     try:
-        dfMoras['Fecha_Pago_Berex'] = pd.to_datetime(dfMoras['payment_date'])
+        dfMoras['Fecha_Pago_Berex'] = pd.to_datetime(dfMoras['Fecha_Pago_Berex'])
         dfMoras['amount'] = dfMoras['amount'].astype(float)
         dfMoras['Referencia'] = dfMoras['Referencia'].apply(cleanReferencia)
         dfMoras['Pago'] = dfMoras['Pago'].astype(float)
@@ -131,8 +132,8 @@ def cleanFlujoBerex(dfFlujo: pd.DataFrame) -> pd.DataFrame:
         dfFlujo['Fecha_Pago_Berex'] = pd.to_datetime(dfFlujo['Fecha_Pago_Berex'])
         dfFlujo['Monto_Berex'] = dfFlujo['Monto_Berex'].astype(float)
         dfFlujo['Pago'] = dfFlujo['Pago'].astype(float)
-        # Se dejan solo Columnas de: Referencia, Fecha_Origen, Fecha_Pago_Berex, Monto_Berex,Destination
-        dfFlujo = dfFlujo[['Referencia', 'Fecha_Origen', 'Fecha_Pago_Berex', 'Monto_Berex', 'Destino']].copy()
+        # Se dejan solo Columnas de: Referencia, Fecha_Origen, Fecha_Pago_Berex, Monto_Berex,Destino
+        dfFlujo = dfFlujo[['Referencia', 'Fecha_Origen', 'Fecha_Pago_Berex', 'Monto_Berex', 'Destino','Pago']].copy()
         notInfinteLog('cleaned_flujo_berex', 'Datos del flujo de Berex limpiados correctamente', method='debug')
         return dfFlujo
     except Exception as e:
@@ -159,8 +160,8 @@ def cleanMensualidades(dfMensualidades: pd.DataFrame) -> pd.DataFrame:
 def loadData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     try:
         # Cargamos Datos de Moras y Mensualidades
-        moras = pd.read_parquet('src/calculator/data/moras.parquet')
-        mensualidades = pd.read_parquet('src/calculator/data/mensualidades.parquet')
+        moras = pd.read_parquet('data/moras.parquet')
+        mensualidades = pd.read_parquet('data/mensualidades.parquet')
         notInfinteLog('loaded_data', 'Datos cargados correctamente', method='debug')
         # Limpiamos los DFs
         moras = cleanMoras(moras)
@@ -176,8 +177,8 @@ def loadData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 def loadTestData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     try:
         # Cargamos Datos de Moras y Mensualidades
-        moras = pd.read_parquet('src/calculator/data/tests/test_berex.parquet')
-        mensualidades = pd.read_parquet('src/calculator/data/tests/test_mensualidades.parquet')
+        moras = pd.read_parquet('data/tests/test_berex.parquet')
+        mensualidades = pd.read_parquet('data/tests/test_mensualidades.parquet')
         notInfinteLog('loaded_test_data', 'Datos de prueba cargados correctamente', method='debug')
         # Limpiamos los DFs
         moras = cleanMoras(moras)
@@ -187,6 +188,78 @@ def loadTestData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     except Exception as e:
         notInfinteLog('error_loading_test_data', f'Error al cargar los datos de prueba: {e}', method='error')
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+
+# Función Auxiliar para Calcular el Flujo Completo como DataFrame
+def calcCompleteFlujo(flujoBerex: pd.DataFrame, flujoMensualidades: pd.DataFrame) -> pd.DataFrame:
+    # El Flujo Completo Comprende los Datos de : Pagos de Comisiones, Pagos de PaB y pagos de Mensualidades,
+    # cada uno con su respectiva fecha y si ya esta pagado o no
+
+    # 1. Creamos el Diccionario donde se va a guardar la Información del Flujo Completo
+    completeFlow = {
+        'Fecha PaB': [],
+        'Fecha Comision': [],
+        'Fecha Mensualidad': [],
+        'Monto PaB': [],
+        'Monto Comision': [],
+        'Monto Mensualidad': [],
+        'Pagado PaB': [],
+        'Pagado Comision': [],
+        'Pagado Mensualidad': [],
+    }
+
+    # 2. Vamos a Iterar mes a mes y a ir añadiendo los datos respectivos
+    startWindow = flujoBerex['Fecha_Pago_Berex'].min()
+    endWindow = flujoBerex['Fecha_Pago_Berex'].max()
+
+    currentDate = startWindow
+    while currentDate <= endWindow:
+
+
+        stopDate = currentDate.replace(day=1) + pd.offsets.MonthEnd()  # Fin del mes actual
+        # Agregamos los Datos de PaB y Comisiones del Flujo de Berex
+        flujoBerexCurrent = flujoBerex[flujoBerex['Fecha_Pago_Berex'].between(currentDate, stopDate)]
+
+        # Calculamos el Pago Total del Mes
+        pagoMes = flujoBerexCurrent['Pago'].sum()
+
+        montoPaB = flujoBerexCurrent[flujoBerexCurrent['Destino'] == 'bank']['Monto_Berex'].sum()
+        montoComision = flujoBerexCurrent[flujoBerexCurrent['Destino'] == 'commission']['Monto_Berex'].sum()
+        pagadoPaB = montoPaB >= pagoMes
+        pagadoComision = montoComision + montoPaB >= pagoMes
+        fechaPaB = flujoBerexCurrent[flujoBerexCurrent['Destino'] == 'bank']['Fecha_Pago_Berex'].min() if montoPaB > 0 else pd.NaT
+        fechaComision = flujoBerexCurrent[flujoBerexCurrent['Destino'] == 'commission']['Fecha_Pago_Berex'].min() if montoComision > 0 else pd.NaT
+
+        # Agregamos los Datos de Mensualidades del Flujo de Mensualidades
+        flujoMensualidadesCurrent = flujoMensualidades[flujoMensualidades['Fecha_Facturacion'].between(currentDate, stopDate)]
+        montoMensualidad = flujoMensualidadesCurrent['Monto'].sum()
+        pagadoMensualidad = np.all(flujoMensualidadesCurrent['Status_Facturacion'] != "POR_COBRAR") or flujoMensualidadesCurrent.empty
+        fechaMensualidad = flujoMensualidadesCurrent[flujoMensualidadesCurrent['Status_Facturacion'] != "POR_COBRAR"]['Fecha_Facturacion'].min() if montoMensualidad > 0 else pd.NaT
+
+        # Verificamos que exista alguna fecha si no continuamos
+        if (pd.isna(fechaPaB) and pd.isna(fechaComision) and pd.isna(fechaMensualidad)):
+            # Avanzamos al Siguiente Mes
+            currentDate += pd.DateOffset(months=1)
+            continue
+
+        # Agregamos la Información al Flujo Completo
+        completeFlow['Monto PaB'].append(montoPaB)
+        completeFlow['Monto Comision'].append(montoComision)
+        completeFlow['Monto Mensualidad'].append(montoMensualidad)
+        completeFlow['Pagado PaB'].append(pagadoPaB)
+        completeFlow['Pagado Comision'].append(pagadoComision)
+        completeFlow['Pagado Mensualidad'].append(pagadoMensualidad)
+        completeFlow['Fecha PaB'].append(fechaPaB)
+        completeFlow['Fecha Comision'].append(fechaComision)
+        completeFlow['Fecha Mensualidad'].append(fechaMensualidad)
+
+
+        # Avanzamos al Siguiente Mes
+        currentDate += pd.DateOffset(months=1)
+
+    # Convertimos el Diccionario del Flujo Completo a un DataFrame
+    dfCompleteFlow = pd.DataFrame(completeFlow)
+
+    return dfCompleteFlow
 
 # --- Métricas y Cálculos ---
 
