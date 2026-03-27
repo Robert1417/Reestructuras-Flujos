@@ -27,5 +27,20 @@ def setup_logging():
     logger.info("Logger initialized for the first time.")
     return logger
 
+# Función Auxiliar para Evitar Logs por cada Ejecución de la Calculadora, Solo se Logueará la Primera Ejecución o 
+# Si existe un cambio en Acción del cliente (el session_state de accion_user cambia a True)
+def notInfinteLog(name: str, message: str, method: str = 'info') -> None:
+    # Primera Verificación: El Session state de name no existe, lo que indica que es la primera ejecución de la calculadora, por lo que se loguea el mensaje
+    if name not in st.session_state:
+        getattr(debugLogger, method)(message)  # Se loguea el mensaje utilizando el método especificado (info, debug, warning, error)
+        st.session_state[name] = True  # Se establece el session state para evitar logs futuros
+        return # Para Finalizar la Ejecución de la Función
+    # Segunda Verificación: El Session state de name existe y el session_state de accion_user es True, lo que indica que el cliente ha realizado una acción, por lo que se loguea el mensaje
+    if st.session_state.get('accion_user', False):
+        getattr(debugLogger, method)(message)  # Se loguea el mensaje utilizando el método especificado (info, debug, warning, error)
+        return # Para Finalizar la Ejecución de la Función
+    # Si ninguna de las condiciones anteriores se cumple, no se loguea el mensaje para evitar logs infinitos por cada ejecución de la calculadora sin acciones del cliente
+    notInfinteLog(f'ignored_{name}', f'Mensaje ignorado: {message}', method='debug')
+
 # Create a global instance that can be imported elsewhere
 debugLogger = setup_logging()

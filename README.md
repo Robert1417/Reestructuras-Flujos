@@ -12,6 +12,15 @@ Con toda esta información se realiza el siguiente procedimiento:
 2. **Unión de Datos**: La unión entre el flujo y las moras será por Referencia, mientras que la unión con las Mensualidades se realizará mes a mes.
 
 ___
+
+# **Datos de la Reestructura**
+
+Los Datos se almacenan localmente en formato *.parquet* e incluyen:
+- **moras.parquet**: Referencia - Fecha - Fecha_Origen - Por_Cobrar - Pago - Status_Mora
+- **cartera.parquet**: Referencia - Fecha_Origen - Fecha_Pago_Berex - Monto_Berex - Destino
+- **mensualidades.parquet**: Referencia - Status_Facturacion - Status_Reparadora - Monto_Mensualidad - Fecha_Cobro
+
+___
 # **Parámetros de la Reestructura**
 
 Los Parámetros son datos que pueden ser cambiados para negociar la reestructura, incluyendo:
