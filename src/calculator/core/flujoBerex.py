@@ -6,7 +6,7 @@ from typing import Tuple
 import pandas as pd
 
 # Importamos el Logger
-from calculator.app import debugLogger
+from src.calculator.utils.logger_setup import debugLogger
 
 # Se crea la clase de FlujoBerex
 class FlujoBerex:

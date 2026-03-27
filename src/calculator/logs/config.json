@@ -15,14 +15,14 @@
         "file": {
             "class": "logging.handlers.TimedRotatingFileHandler",
             "formatter": "simple",
-            "filename": "./src/calculator/logging/calculator_debug.log",
+            "filename": "./src/calculator/logs/calculator_debug.log",
             "when": "D",                
             "interval": 1,              
             "backupCount": 3,           
             "encoding": "utf-8"
         },
         "gsheets": {
-            "class": "src.calculator.logging.sheetsLogger.SheetsLoggerHandler",
+            "class": "src.calculator.logs.sheetsLogger.SheetsLoggerHandler",
             "formatter": "simple",
             "spreadsheet_id": "1Gn3AzCN9jM9u2sWCsv-2RBdNBZnQsJ9RzDuOttQnAac",
             "sheet_name": "Logs"  

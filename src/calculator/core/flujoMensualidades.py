@@ -4,7 +4,7 @@
 import pandas as pd
 
 # Importamos el Logger
-from calculator.app import debugLogger
+from src.calculator.utils.logger_setup import debugLogger
 
 # Creamos la Clase de FlujoMensualidades
 class FlujoMensualidades:

@@ -16,7 +16,7 @@ st.set_page_config(page_title="Inicio",page_icon='🤖', layout="wide")
 moras, mensualidades, flujo = loadTestData()
 
 # Ahora Cargamos los Datos de Configuracion de los Clientes Test
-with open('src/calculator/data/tests/parametros.json', 'r') as f:
+with open('data/tests/parametros.json', 'r') as f:
     clientesConfig = json.load(f)
 
 # --- Agregación de Datos de Sidebar

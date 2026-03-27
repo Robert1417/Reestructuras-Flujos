@@ -46,11 +46,11 @@ class SheetsLoggerHandler(logging.Handler):
             # Nos Conectamos a Google Sheets usando gspread y las Credenciales
             client = gspread.authorize(credentials)
             # Abrimos la Hoja de Cálculo por su ID
-            self.sheet = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
+            self.worksheet = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
             print(f"Conectado a Google Sheets: {sheet_name} en {spreadsheet_id}")
         except Exception as e:
             print(f"Error al conectar con Google Sheets: {e}")
-            self.sheet = None
+            self.worksheet = None
     
     def format(self, record):
         # Se crea la Fila para Subir a Sheets con la Información del Log
@@ -98,7 +98,7 @@ class SheetsLoggerHandler(logging.Handler):
 
     def _apply_color_formatting(self, row_index, levelname):
         """Dedicated method for cell styling."""
-        color = self.level_colors.get(levelname, {"red": 1, "green": 1, "blue": 1})
+        color = self.levelColors.get(levelname, {"red": 1, "green": 1, "blue": 1})
         
         # Target Column B (where the level name is)
         self.worksheet.format(f"B{row_index}", {

@@ -9,9 +9,6 @@ from src.calculator.utils.helpers import updateSessionState,areSessionStatesVali
 from src.calculator.ui.components import mostrarParametrosEntrada, mostrarFlujo, compararMetricasFlujo
 from src.calculator.core import FlujoTotal
 
-# Importamos el Logger
-from src.calculator.app import debugLogger
-
 # Configuramos el Nombre de Esta Página a Calculadora
 st.set_page_config(page_title="Calculadora", page_icon=":calculator:", layout="wide")
 

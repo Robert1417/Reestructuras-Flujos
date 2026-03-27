@@ -4,11 +4,12 @@
 import pandas as pd
 
 # Imports Adicionales
-from src.calculator.core import FlujoMensualidades, FlujoBerex
+from src.calculator.core.flujoMensualidades import FlujoMensualidades
+from src.calculator.core.flujoBerex import FlujoBerex
 from typing import Tuple
 
 # Importamos el Logger para Mostrar los Logs de la Clase
-from src.calculator.app import debugLogger
+from src.calculator.utils.logger_setup import debugLogger
 from src.calculator.utils.helpers import notInfinteLog
 
 # Creamos la Clase FlujoTotal
