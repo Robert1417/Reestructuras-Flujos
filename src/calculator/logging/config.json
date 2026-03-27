@@ -22,7 +22,7 @@
             "encoding": "utf-8"
         },
         "gsheets": {
-            "class": "src.calculator.logging.SheetsLoggerHandler",
+            "class": "src.calculator.logging.sheetsLogger.SheetsLoggerHandler",
             "formatter": "simple",
             "spreadsheet_id": "1Gn3AzCN9jM9u2sWCsv-2RBdNBZnQsJ9RzDuOttQnAac",
             "sheet_name": "Logs"  

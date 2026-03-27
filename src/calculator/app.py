@@ -1,7 +1,5 @@
 # Imports Core
 import streamlit as st
-import logging
-import logging.config
 import json
 import pandas as pd
 
@@ -9,14 +7,6 @@ import pandas as pd
 from src.calculator.utils.helpers import loadTestData, getSessionStateWithDefault,isSessionStateDefined, getSessionState
 from src.calculator.ui.components import mostrarFlujo, mostrarParametrosEntrada, compararMetricasFlujo
 from src.calculator.core import FlujoTotal
-
-# Le agregamos las Configuraciones de src/calculator/logging/config.json
-with open('src/calculator/logging/config.json', 'r') as f:
-    config = json.load(f)
-    logging.config.dictConfig(config)
-
-# Definimos nuestro Logger de Debugging
-debugLogger = logging.getLogger('calculator_debug')
 
 # Configuramos el Título de la Aplicación
 st.set_page_config(page_title="Inicio",page_icon='🤖', layout="wide")

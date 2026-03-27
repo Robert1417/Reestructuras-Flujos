@@ -21,7 +21,7 @@ class SheetsLoggerHandler(logging.Handler):
         super().__init__(level)
 
         # Obtenemos el String de las Credenciales
-        creds_info = secrets["google_sheets_credentials"]
+        creds_info = secrets["MI_JSON"]
         # Volvemos las Credenciales en un Diccionario
         creds = json.loads(creds_info)
         # Creamos las Credenciales de Google a Partir del Diccionario
@@ -47,6 +47,7 @@ class SheetsLoggerHandler(logging.Handler):
             client = gspread.authorize(credentials)
             # Abrimos la Hoja de Cálculo por su ID
             self.sheet = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
+            print(f"Conectado a Google Sheets: {sheet_name} en {spreadsheet_id}")
         except Exception as e:
             print(f"Error al conectar con Google Sheets: {e}")
             self.sheet = None

@@ -8,7 +8,7 @@ import streamlit as st
 from typing import Tuple, Any, Callable
 
 # Importamos el Logger de Debugging
-from src.calculator.app import debugLogger
+from src.calculator import debugLogger
 
 # --- Manejo de Logs ---
 
