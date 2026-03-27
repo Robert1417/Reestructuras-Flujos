@@ -22,6 +22,9 @@ class FlujoMensualidades:
         dfMensualidades = dfMensualidades.sort_values(by='Fecha_Mensualidad')
 
         for index, row in dfMensualidades.iterrows():
+            # Si la Mensualidad la Columna Status_Facturacion no es POR_COBRAR se ignora
+            if row['Status_Facturacion'] != 'POR_COBRAR':
+                continue
             mensualidad = self.Mensualidad(row['Fecha_Mensualidad'], row['Monto_Mensualidad'])
             self.mensualidades.append(mensualidad)
         

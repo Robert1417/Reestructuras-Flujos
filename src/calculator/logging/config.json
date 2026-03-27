@@ -20,11 +20,17 @@
             "interval": 1,              
             "backupCount": 3,           
             "encoding": "utf-8"
+        },
+        "gsheets": {
+            "class": "src.calculator.logging.SheetsLoggerHandler",
+            "formatter": "simple",
+            "spreadsheet_id": "1Gn3AzCN9jM9u2sWCsv-2RBdNBZnQsJ9RzDuOttQnAac",
+            "sheet_name": "Logs"  
         }
     },
     "loggers": {
-        "calculator_debug": {            
-            "handlers": ["stdout", "file"],
+        "calculator_debug": {
+            "handlers": ["stdout", "file", "gsheets"],
             "propagate": false
         }
     }
