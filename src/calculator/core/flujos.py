@@ -10,7 +10,7 @@ from typing import Tuple
 
 # Librerías de Ayuda
 from src.calculator.utils.logger_setup import notInfinteLog, logClassWrapper
-from src.calculator.utils.data_load import filterDataToToday, emptyBerex, filterDataByMonth
+from src.calculator.utils.data_load import addSaldoPendienteToBerex, emptyBerex, filterDataByMonth
 from src.calculator.utils.helpers import getNextMonthDay
 
 # Creamos Clase de FlujoTotal, que contiene Información de:
@@ -23,9 +23,6 @@ class FlujoTotal:
         self.moras = moras
         self.berex = berex
         self.mensualidades = mensualidades
-
-        # Se Agrega la Columna de Saldo_Pendiente al Flujo de Berex
-        self.agregarSaldoPendienteBerex()
 
         self.nuevoFlujo = None # Inicializamos el Nuevo Flujo como None, ya que aún no se ha calculado
         self.motivoNoViable = None # Inicializamos el Motivo de No Viabilidad como None, ya que aún no se ha evaluado la viabilidad de la reestructura
@@ -41,27 +38,6 @@ class FlujoTotal:
         montoPagado = self.moras['Pago'].sum()
         notInfinteLog(f"Monto_Pagado_{self.ref}", f"El Monto Pagado por el Cliente es: {montoPagado}")
         return montoPagado
-
-    # Método para Agregar Columna de Saldo_Pendiente en el Flujo de Berex
-    @logClassWrapper(message="Error al Agregar Columna de Saldo_Pendiente en el Flujo de Berex", onErrorValue=None)
-    def agregarSaldoPendienteBerex(self):
-        # Primero Obtenemos el Monto Total Pagado por el Cliente
-        montoPagado = self.calcularTotalPagado()
-        # Ahora Ordenamos el Flujo de Berex por Destino y Fecha_Pago_Berex para Dejar Primero las Facturas con Destino Banco y Luego las Facturas con Destino Comision, lo que nos Permitirá Iterar por el Flujo de Berex y Restar el Monto_Berex al Monto Pagado por el Cliente para Obtener el Saldo Pendiente de Pago del Cliente después de cada Factura del Flujo de Berex
-        berexOrdenado = self.berex.sort_values(by=['Destino','Fecha_Pago_Berex']).reset_index(drop=True) # Esto Dejara Primero Banco y luego Comision
-        # Ahora se crea una Lista Vacía para Guardar el Saldo Pendiente después de cada Factura del Flujo de Berex
-        saldoPendienteList = []
-        # Ahora se Itera por el Flujo de Berex Ordenado y se Resta el Monto_Berex al Monto Pagado por el Cliente para Obtener el Saldo Pendiente de Pago del Cliente después de cada Factura del Flujo de Berex, y se Guarda ese Saldo Pendiente en la Lista de Saldo Pendiente
-        for idx, row in berexOrdenado.iterrows():
-            # Se Verifica el Máximo Pago para esta Factura
-            maxPago = min(montoPagado, row['Monto_Berex'])
-            # Se Resta el Máximo Pago al Monto Pagado por el Cliente para Obtener el Saldo Pendiente de Pago del Cliente después de esta Factura del Flujo de Berex
-            montoPagado -= maxPago
-            saldoPendienteList.append(row['Monto_Berex'] - maxPago)
-        # Ahora se Agrega la Columna de Saldo_Pendiente al Flujo de Berex Ordenado
-        berexOrdenado['Saldo_Pendiente'] = saldoPendienteList
-        notInfinteLog(f"saldo_pendiente_berex_{self.ref}", f"Se ha Agregado la Columna de Saldo_Pendiente al Flujo de Berex para la Referencia {self.ref}", method='debug')
-
 
     # Método para Obtener el Flujo de Berex
     @logClassWrapper(message="Error al Obtener el Flujo de Berex", onErrorValue=emptyBerex)
@@ -316,6 +292,8 @@ class FlujoTotal:
         
         # Una vez que se ha Salido del Ciclo, se Crea el Nuevo Flujo de Berex a Partir del Diccionario del Nuevo Flujo de Berex
         nuevoFlujo = pd.DataFrame(nuevoFlujoDict)
+        # Asignamos el Saldo_Pendiente del Nuevo Flujo como el Monto_Berex
+        nuevoFlujo['Saldo_Pendiente'] = nuevoFlujo['Monto_Berex']
         # El Flujo Nuevo en Sí seran las Facturas Pagadas + el Nuevo Flujo de Berex
         self.nuevoFlujo = pd.concat([self.obtenerFacturasPagadas(), nuevoFlujo], ignore_index=True).sort_values(by='Fecha_Pago_Berex').reset_index(drop=True)
 
