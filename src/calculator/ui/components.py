@@ -1,132 +1,63 @@
-# Datos de Componentes de la Interfaz de Usuario para el Flujo Berex
-
-# Librearías Core
+# Librerías Core
 import streamlit as st
-
-# Librerías de Manipulación de Datos
 import pandas as pd
 
-# Librerías de Utilidades
-from src.calculator.utils.helpers import notInfinteLog, calcMetricasFlujo, calcCompleteFlujo
+# Librerías de Ayuda
+from src.calculator.utils.calculos_flujos import calcularMetricasFlujos, calcularFacturasPendientes
+from src.calculator.utils.logger_setup import logWrapper,stWarningLogWrapper
+from src.calculator.utils.data_load import columnasBerex
 
-# Función Auxiliar para Mostrar los Párametros de Entrada en la Barra Lateral como Métricas
-def mostrarParametrosEntrada(cliente_ref, fecha_inicio_pago, nuevo_apartado_mensual, nuevo_pago_inicial):
+# Función para Mostrar el Flujo de Berex y Métricas en la Aplicación
+@stWarningLogWrapper(message="Error al mostrar el Flujo de Berex y Métricas en la Aplicación")
+def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensualidades: pd.DataFrame) -> None:
+    """
+    Muestra el flujo de berex y las métricas calculadas en la aplicación.
 
-    st.subheader("Métricas de la Reestructura")
+    Args:
+        moras (pd.DataFrame): DataFrame que contiene las moras.
+        berex (pd.DataFrame): DataFrame que contiene los datos de berex.
+        mensualidades (pd.DataFrame): DataFrame que contiene las mensualidades.
+    """
+    # Calculamos las Métricas de los Flujos
+    pagoActualCliente, valorTotalPagar, cuotasPendientes, porcentajePago, statusMora = calcularMetricasFlujos(moras, berex, mensualidades)
 
-    # Se van a mostrar cada uno en una columna
-    col1, col2, col3, col4 = st.columns(4, gap="small", vertical_alignment='center')
+    # Creamos 2 Columnas: 1 para mostrar el Flujo de Berex y otra para mostrar las Métricas
+    col1, col2 = st.columns([3, 1])
 
-    col1.metric("Referencia del Cliente", cliente_ref)
-    col2.metric("Fecha Inicio de Pago", fecha_inicio_pago.strftime("%Y-%m-%d"))
-    col3.metric("Nuevo Apartado Mensual", f"${nuevo_apartado_mensual:,.2f}")
-    col4.metric("Nuevo Pago Inicial", f"${nuevo_pago_inicial:,.2f}")
-
-# Función Auxiliar para mostrar el Pago Mínimo Inicial
-def mostrarPagoMinimoInicial(mensualidadesDF):
-
-    st.subheader("Pago Mínimo Inicial Requerido")
-
-    if mensualidadesDF.empty:
-        st.warning("No hay datos de mensualidades para calcular el pago mínimo inicial.")
-        return
-
-    # Calculamos el Pago Mínimo Inicial como la suma del Monto de las Mensualidades hasta hoy
-    # Con Status_Facturacion POR_COBRAR, porque solo esas mensualidades se consideran para el pago mínimo inicial
-    hoy = pd.Timestamp.now().normalize()
-    mensualidadesVigentes = mensualidadesDF[(mensualidadesDF['Fecha_Facturacion'] <= hoy) & (mensualidadesDF['Status_Facturacion'] == 'POR_COBRAR')]
-    pago_minimo_inicial = mensualidadesVigentes['Monto'].sum()
-
-    # Mostramos el Pago Mínimo Inicial como una Métrica Destacada en el centro
-    with st.container(horizontal_alignment='center'):
-        st.metric("Pago Mínimo Inicial Requerido", f"${pago_minimo_inicial:,.2f}")
-
-# Función Auxiliar para Comparar Métricas entre 2 Flujos
-def compararMetricasFlujo(dfFlujo1: pd.DataFrame, dfFlujo2: pd.DataFrame, subheader1: str, subheader2: str):
-    col1, col2 = st.columns(2, gap="large", vertical_alignment='center')
-
+    # En la Columna 1, Mostramos el Flujo de Berex
     with col1:
-        st.subheader(subheader1)
-        totalPagado1, totalMontoBerex1, porcentajePagado1 = calcMetricasFlujo(dfFlujo1)
-        st.metric("Total Pagado", f"${totalPagado1:,.2f}")
-        st.metric("Total Monto Berex", f"${totalMontoBerex1:,.2f}")
-        st.metric("Porcentaje Pagado", f"{porcentajePagado1:.2f}%")
+        st.subheader("Flujo de Berex")
+        # Mostramos los Datos de Berex
+        st.dataframe(berex[columnasBerex])
 
+    # En la Columna 2, Mostramos las Métricas Calculadas
     with col2:
-        st.subheader(subheader2)
-        totalPagado2, totalMontoBerex2, porcentajePagado2 = calcMetricasFlujo(dfFlujo2)
-        st.metric("Total Pagado", f"${totalPagado2:,.2f}")
-        st.metric("Total Monto Berex", f"${totalMontoBerex2:,.2f}")
-        st.metric("Porcentaje Pagado", f"{porcentajePagado2:.2f}%")
+        st.subheader("Métricas del Cliente")
+        st.metric(label="Pago Actual del Cliente", value=f"${pagoActualCliente:,.2f}")
+        st.metric(label="Valor Total a Pagar por el Cliente",
+                value=f"${valorTotalPagar:,.2f}",
+                delta=f"${valorTotalPagar - pagoActualCliente:,.2f}", delta_color="inverse")
+        st.metric(label="Número de Cuotas Pendientes por Pagar del Cliente",
+                value=cuotasPendientes,
+                delta_color="green" if cuotasPendientes > 0 else "red")
+        st.metric(label="Porcentaje de Pago del Cliente", value=f"{porcentajePago:.2f}%", delta="100.00%")
+        st.metric(label="Status de Mora del Cliente",
+                value=statusMora,
+                delta_color="green" if statusMora.lower() == "al día" else "red")
 
-# Función Auxiliar para Mostrar Flujo de Berex con Estadísticas
-def mostrarFlujo(dfFlujo: pd.DataFrame, subheader: str):
-    if dfFlujo.empty:
-        st.warning("No hay datos de flujo para mostrar.")
-        return
+# Función Auxiliar para Mostrar los Párametros de la Reestructura
+@stWarningLogWrapper(message="Error al mostrar los Parámetros de la Reestructura")
+def mostrarParametrosReestructura(params: dict) -> None:
+    """
+    Muestra los parámetros de la reestructura en la aplicación.
 
-    # Agregamos el Subheader Dado
-    st.subheader(subheader)
+    Args:
+        params (dict): Diccionario que contiene los parámetros de la reestructura.
+    """
+    st.subheader("Parámetros de la Reestructura")
 
-    # Creamos 2 Columnas: 1 Para mostrar el DataFrame y otra para Mostrar Métricas
-    # Vamos a dejar la Columna del DataFrame con un Ancho Mayor para que se vea mejor, y la Columna de Métricas con un Ancho Menor
-    col1, col2 = st.columns([5, 3], gap="large", vertical_alignment='center')
-
-    # En la Primera Columna Mostramos el DataFrame del Flujo
-    with col1:
-        st.dataframe(dfFlujo, use_container_width=True)
-
-    # En la Columna 2 Mostramos Métricas Clave del Flujo
-    with col2:
-        # Creamos un Contenedor para que las Métricas se Muestren en Vertical distribuídas uniformemente
-        with st.container(vertical_alignment='distribute'):
-            totalPagado, totalMontoBerex, porcentajePagado = calcMetricasFlujo(dfFlujo)
-            st.metric("Total Pagado", f"${totalPagado:,.2f}")
-            st.metric("Total Monto Berex", f"${totalMontoBerex:,.2f}")
-            st.metric("Porcentaje Pagado", f"{porcentajePagado:.2f}%")
-
-
-# Función Auxiliar para mostrar un Flujo Completo
-def mostrarFlujoCompleto(flujoMoras: pd.DataFrame, flujoMensualidades: pd.DataFrame):
-
-    # Primero calculamos el Flujo Completo utilizando la Función calcularFlujoCompleto del archivo helpers.py
-    dfCompleteFlow = calcCompleteFlujo(flujoMoras, flujoMensualidades)
-
-    # Ahora vamos a Aplicarle Estilos y Orden a las Columnas
-
-    # 1. Aplicamos estilos para resaltar Columnas Montos basados en si esta pagado o no
-    def highlight_pagado(row):
-        if row['Pagado PaB']:
-            return ['background-color: lightgreen' if col == 'Monto PaB' else '' for col in row.index]
-        elif row['Pagado Comision']:
-            return ['background-color: lightblue' if col == 'Monto Comision' else '' for col in row.index]
-        elif row['Pagado Mensualidad']:
-            return ['background-color: lightyellow' if col == 'Monto Mensualidad' else '' for col in row.index]
-        else:
-            return ['' for _ in row.index]
-    
-    dfCompleteFlowStyled = dfCompleteFlow.style.apply(highlight_pagado, axis=1)
-
-    # Ahora creamo Columna de Pagado Total como la suma de Monto PaB y Monto Comision teniendo en cuenta si estan pagados
-    dfCompleteFlow['Monto Total Pagado'] = (
-        dfCompleteFlow['Monto PaB'] * dfCompleteFlow['Pagado PaB'].astype(int) + 
-        dfCompleteFlow['Monto Comision'] * dfCompleteFlow['Pagado Comision'].astype(int) +
-        dfCompleteFlow['Monto Mensualidad'] * dfCompleteFlow['Pagado Mensualidad'].astype(int)
-    )
-
-    # Volvemos las Columnas Númericas a String con Formato de Moneda para que se vean mejor
-    dfCompleteFlow['Monto PaB'] = dfCompleteFlow['Monto PaB'].apply(lambda x: f"${x:,.2f}" if x > 0 else "$0.00")
-    dfCompleteFlow['Monto Comision'] = dfCompleteFlow['Monto Comision'].apply(lambda x: f"${x:,.2f}" if x > 0 else "$0.00")
-    dfCompleteFlow['Monto Mensualidad'] = dfCompleteFlow['Monto Mensualidad'].apply(lambda x: f"${x:,.2f}" if x > 0 else "$0.00")
-    dfCompleteFlow['Monto Total Pagado'] = dfCompleteFlow['Monto Total Pagado'].apply(lambda x: f"${x:,.2f}" if x > 0 else "$0.00")
-
-    # Reordenamos las Columnas para que tengan un Orden Lógico
-    dfCompleteFlow = dfCompleteFlow[
-        ['Fecha PaB', 'Monto PaB', 'Fecha Comision', 'Monto Comision', 'Fecha Mensualidad', 'Monto Mensualidad', 'Monto Total Pagado']
-    ]
-
-    # Agregamos un subheader
-    st.subheader("Flujo Completo de Berex con Mensualidades")
-
-    # Finalmente Mostramos el Flujo Completo con Estilos
-    st.dataframe(dfCompleteFlow, use_container_width=True)
+    # Creamos las Columnas Necesarias para Mostrar los Parámetros de la Reestructura
+    cols = st.columns(len(params), vertical_alignment="center")
+    for i, (parametro, valor) in enumerate(params.items()):
+        with cols[i]:
+            st.metric(label=parametro, value=valor)

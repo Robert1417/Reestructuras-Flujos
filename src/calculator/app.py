@@ -1,60 +1,81 @@
-# Imports Core
+# Librerías Core
 import streamlit as st
-import json
 import pandas as pd
+import numpy as np
 
-# Imports Adicionales
-from src.calculator.utils.helpers import loadTestData, getSessionStateWithDefault,isSessionStateDefined, getSessionState
-from src.calculator.ui.components import mostrarFlujo, mostrarParametrosEntrada, compararMetricasFlujo
-from src.calculator.core import FlujoTotal
+# Librerías de Ayuda
+from src.calculator.utils.data_load import loadTestData, loadTestParams
+from src.calculator.utils.session_state_managers import initializeSessionState, getSessionStateWithDefault
+from src.calculator.ui.components import mostrarFlujoBerexYMetricas, mostrarParametrosReestructura
 
-# Configuramos el Título de la Aplicación
-st.set_page_config(page_title="Inicio",page_icon='🤖', layout="wide")
+# Definimos la Función Principal de Ejecución
+def main():
 
-# --- Carga de Datos de Prueba ---
-# No es Necesario Realizar Cambios en la Carga de Datos de Prueba porque ya usa Cache, pero lo dejamos aquí para Mejorar la Visualización del Código
-moras, mensualidades, flujo = loadTestData()
+    # --- Carga de Datos ---
 
-# Ahora Cargamos los Datos de Configuracion de los Clientes Test
-with open('data/tests/parametros.json', 'r') as f:
-    clientesConfig = json.load(f)
+    # Traemos los Datos de Prueba
+    morasDF, berexDF, mensualidadesDF = loadTestData()
+    # Traemos los Parámetros de Prueba
+    params = loadTestParams()
 
-# --- Agregación de Datos de Sidebar
+    # Definimos las Referencias Únicas y las Guardamos en el Session State
+    referenciasUnicas = list(morasDF['Referencia'].unique())
+    initializeSessionState('referencias_unicas_test', referenciasUnicas)
 
-# Agregamos un Control de Referencias únicas en la barra lateral
-uniqueRefs = moras['Referencia'].unique().tolist()
-cliente_ref = st.sidebar.selectbox("Selecciona la Referencia del Cliente", uniqueRefs,
-                                    index=0, help="Selecciona la Referencia del Cliente para mostrar sus datos y métricas asociadas.")
+    # --- Configuración de la Página ---
+    st.set_page_config(
+        page_title="Inicio Calculadora",
+        page_icon="📊",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
 
-# Creamos los DFs filtrados por esa referencia
-moraCliente = moras[moras['Referencia'] == cliente_ref]
-mensualidadCliente = mensualidades[mensualidades['Referencia'] == cliente_ref]
-flujoCliente = flujo[flujo['Referencia'] == cliente_ref]
+    # --- Configuración del Sidebar ---
 
-# Dejamos las Configuraciones del Cliente 
-clientConfigs = clientesConfig.get(cliente_ref, {})
+    # Agregamos un Título al Sidebar
+    st.sidebar.title("Parámetros de Prueba")
 
-# Volvemos fecha_inicio_pago un datetime para mostrarlo como métrica
-fecha_inicio_pago = pd.to_datetime(clientConfigs.get('fecha_inicio_pago', pd.Timestamp.now()), errors='coerce')
-# Volvemos los otros parámetros numéricos para mostrarlos como métricas
-nuevo_apartado_mensual = float(clientConfigs.get('nuevo_apartado_mensual', 0))
-nuevo_pago_inicial = float(clientConfigs.get('nuevo_pago_inicial', 0))
+    # Obtenemos las Referencias Únicas del Session State
+    referenciasUnicas = getSessionStateWithDefault('referencias_unicas_test', list)
+    # Agregamos un Selector de Referencias al Sidebar
+    referenciaSeleccionada = st.sidebar.selectbox("Selecciona una Referencia", 
+                                                referenciasUnicas,
+                                                )
 
-# --- Visualización de la Página
+    # Filtrado de DataFrames según la Referencia Seleccionada
+    morasFiltradas = morasDF[morasDF['Referencia'] == referenciaSeleccionada]
+    berexFiltrado = berexDF[berexDF['Referencia'] == referenciaSeleccionada]
+    mensualidadesFiltradas = mensualidadesDF[mensualidadesDF['Referencia'] == referenciaSeleccionada]
 
-# Mostramos un Título Principal para la Aplicación
-st.title("Bienvenido a la Calculadora de Berex")
-# Ponemos un Separador para Mejorar la Visualización
-st.divider()
+    paramsRef = params.get(referenciaSeleccionada, {})
 
-# Mostramos el Flujo de Prueba utilizando el componente personalizado
-mostrarFlujo(flujoCliente,"Flujo de Prueba de Berex")
+    # --- Vista de la Aplicación ---
 
-# Ponemos otro Separador para Mejorar la Visualización
-st.divider()
+    # Ponemos un Título a la Aplicación
+    st.title("Inicio de Calculadora de Reestructuras")
 
-# Mostramos los Parámetros de Entrada del Cliente utilizando el componente personalizado
-mostrarParametrosEntrada(cliente_ref, fecha_inicio_pago, nuevo_apartado_mensual, nuevo_pago_inicial)
+    # Añadimos un Divisor
+    st.divider()
 
-# Ponemos otro Separador para Mejorar la Visualización
-st.divider()
+    # Añadimos un Subtítulo
+    st.subheader("Flujo de Berex y Métricas del Cliente (ANTES DE LA REESTRUCTURA)")
+
+    # Mostramos el Flujo de Berex y las Métricas Calculadas en la Aplicación
+    mostrarFlujoBerexYMetricas(morasFiltradas, berexFiltrado, mensualidadesFiltradas)
+
+    # Añadimos un Divisor
+    st.divider()
+
+    # Mostramos los Parámetros de la Reestructura en la Aplicación
+    mostrarParametrosReestructura(paramsRef)
+
+    # Creamos un Divisor
+    st.divider()
+
+    # Creamos un Expandidor para Mostrar el Nuevo Flujo
+    with st.expander("Datos Después de la Reestructura"):
+        # Aquí se mostraría el nuevo flujo de berex y las métricas del cliente después de aplicar la reestructura
+        st.write("Aquí se mostraría el nuevo flujo de berex y las métricas del cliente después de aplicar la reestructura")
+
+if __name__ == "__main__":
+    main()
