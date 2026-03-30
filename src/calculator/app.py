@@ -10,18 +10,18 @@ def main():
     """
     # 1. Definición de las Páginas de la Aplicación
     calculator_page = st.Page(
-        "src/calculator/pages/1_calculadora.py",
+        "pages/1_calculadora.py",
         title="Calculadora",
         icon="🧮",
         default=True
     )
     testing_page = st.Page(
-        "src/calculator/pages/2_testing.py",
+        "pages/2_testing.py",
         title="Testing",
         icon="🧪"
     )
     verification_page = st.Page(
-        "src/calculator/pages/3_verification.py",
+        "pages/3_verificar_datos.py",
         title="Verificación",
         icon="✅"
     )
