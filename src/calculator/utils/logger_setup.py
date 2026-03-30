@@ -32,6 +32,7 @@ def setup_logging():
 
 # Create a global instance that can be imported elsewhere
 debugLogger = setup_logging()
+debugLogger.info("Logger Inicializado y Listo para Usar en la Calculadora.")
 
 # Función Auxiliar para Evitar Logs por cada Ejecución de la Calculadora, Solo se Logueará la Primera Ejecución o 
 # Si existe un cambio en Acción del cliente (el session_state de accion_user cambia a True)
