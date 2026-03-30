@@ -58,6 +58,29 @@ class FlujoTotal:
         """
         return not(self.nuevoFlujo is None)
 
+    # Método para Obtener el Motivo del Error en caso de que el Nuevo Flujo no se haya Calculado Correctamente
+    def getErrorMessage(self) -> str:
+        """Método para Obtener el Motivo del Error en caso de que el Nuevo Flujo no se haya Calculado Correctamente
+
+        Returns:
+            str: El Motivo del Error en caso de que el Nuevo Flujo no se haya Calculado Correctamente
+        """
+        if self.isNuevoFlujoCalculated():
+            return "No se ha Encontrado un Error, el Nuevo Flujo se ha Calculado Correctamente"
+        if self.motivoNoViable is not None:
+            return self.motivoNoViable
+        return "No se ha Encontrado un Motivo Específico para el Error, verificar los Parámetros de la Reestructura y los Datos del Cliente"
+    
+    # Método para saber si el Nuevo Flujo es Viable o No Viable
+    def isNuevoFlujoViable(self) -> bool:
+        """Método para saber si el Nuevo Flujo es Viable o No Viable
+
+        Returns:
+            bool: True si el Nuevo Flujo es Viable, False en caso contrario
+        """
+        # Falta Implementación, por el Momento se Define que el Nuevo Flujo es Viable si se ha Calculado Correctamente, y No Viable si no se ha Calculado Correctamente, pero esto se puede Mejorar Agregando Criterios Específicos para Determinar la Viabilidad del Nuevo Flujo
+        return self.isNuevoFlujoCalculated()
+
     # Método para Calcular el Valor Total Por Cobrar al Cliente
     @logClassWrapper(message="Error al Calcular el Monto Por Cobrar al Cliente", onErrorValue=0.0)
     def calcularTotalPorCobrar(self) -> float:

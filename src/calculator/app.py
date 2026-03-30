@@ -1,81 +1,41 @@
 # Librerías Core
 import streamlit as st
-import pandas as pd
-import numpy as np
+from datetime import datetime
 
 # Librerías de Ayuda
-from src.calculator.utils.data_load import loadTestData, loadTestParams
-from src.calculator.utils.session_state_managers import initializeSessionState, getSessionStateWithDefault
-from src.calculator.ui.components import mostrarFlujoBerexYMetricas, mostrarParametrosReestructura
+from src.calculator.utils.logger_setup import debugLogger
 
-# Definimos la Función Principal de Ejecución
 def main():
-
-    # --- Carga de Datos ---
-
-    # Traemos los Datos de Prueba
-    morasDF, berexDF, mensualidadesDF = loadTestData()
-    # Traemos los Parámetros de Prueba
-    params = loadTestParams()
-
-    # Definimos las Referencias Únicas y las Guardamos en el Session State
-    referenciasUnicas = list(morasDF['Referencia'].unique())
-    initializeSessionState('referencias_unicas_test', referenciasUnicas)
-
-    # --- Configuración de la Página ---
-    st.set_page_config(
-        page_title="Inicio Calculadora",
-        page_icon="📊",
-        layout="wide",
-        initial_sidebar_state="expanded"
+    """Función Principal de Ejecución de la Calculadora, creando la Navegación entre Páginas y Mostrando la Página de Inicio
+    """
+    # 1. Definición de las Páginas de la Aplicación
+    calculator_page = st.Page(
+        "src/calculator/pages/1_calculadora.py",
+        title="Calculadora",
+        icon="🧮",
+        default=True
+    )
+    testing_page = st.Page(
+        "src/calculator/pages/2_testing.py",
+        title="Testing",
+        icon="🧪"
+    )
+    verification_page = st.Page(
+        "src/calculator/pages/3_verification.py",
+        title="Verificación",
+        icon="✅"
     )
 
-    # --- Configuración del Sidebar ---
+    # 2. Creación de la Navegación entre Páginas
+    pg = st.navigation({
+        "Calculadora": [calculator_page],
+        "Testing": [testing_page],
+        "Verificación": [verification_page]
+    })
 
-    # Agregamos un Título al Sidebar
-    st.sidebar.title("Parámetros de Prueba")
-
-    # Obtenemos las Referencias Únicas del Session State
-    referenciasUnicas = getSessionStateWithDefault('referencias_unicas_test', list)
-    # Agregamos un Selector de Referencias al Sidebar
-    referenciaSeleccionada = st.sidebar.selectbox("Selecciona una Referencia", 
-                                                referenciasUnicas,
-                                                )
-
-    # Filtrado de DataFrames según la Referencia Seleccionada
-    morasFiltradas = morasDF[morasDF['Referencia'] == referenciaSeleccionada]
-    berexFiltrado = berexDF[berexDF['Referencia'] == referenciaSeleccionada]
-    mensualidadesFiltradas = mensualidadesDF[mensualidadesDF['Referencia'] == referenciaSeleccionada]
-
-    paramsRef = params.get(referenciaSeleccionada, {})
-
-    # --- Vista de la Aplicación ---
-
-    # Ponemos un Título a la Aplicación
-    st.title("Inicio de Calculadora de Reestructuras")
-
-    # Añadimos un Divisor
-    st.divider()
-
-    # Añadimos un Subtítulo
-    st.subheader("Flujo de Berex y Métricas del Cliente (ANTES DE LA REESTRUCTURA)")
-
-    # Mostramos el Flujo de Berex y las Métricas Calculadas en la Aplicación
-    mostrarFlujoBerexYMetricas(morasFiltradas, berexFiltrado, mensualidadesFiltradas)
-
-    # Añadimos un Divisor
-    st.divider()
-
-    # Mostramos los Parámetros de la Reestructura en la Aplicación
-    mostrarParametrosReestructura(paramsRef)
-
-    # Creamos un Divisor
-    st.divider()
-
-    # Creamos un Expandidor para Mostrar el Nuevo Flujo
-    with st.expander("Datos Después de la Reestructura"):
-        # Aquí se mostraría el nuevo flujo de berex y las métricas del cliente después de aplicar la reestructura
-        st.write("Aquí se mostraría el nuevo flujo de berex y las métricas del cliente después de aplicar la reestructura")
+    # 3. Ejecución de la Página Seleccionada
+    pg.run()
 
 if __name__ == "__main__":
+    debugLogger.info("Iniciando la aplicación de la Calculadora de Reestructuras - {}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     main()

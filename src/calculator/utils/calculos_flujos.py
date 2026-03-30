@@ -82,3 +82,29 @@ def calcularMetricasFlujos(moras: pd.DataFrame, berex: pd.DataFrame, mensualidad
     statusMora = morasToday.sort_values(by='Fecha_Mora')['Status_Mora'].iloc[-1] if not morasToday.empty else 'Al día'
 
     return pagoActualCliente, valorTotalPagarCliente, numCuotasPendientes, porcentajePago, statusMora
+
+# Función Auxiliar para Obtener el Pago Mínimo Inicial del Cliente
+@logWrapper(message="Calculando el Pago Mínimo Inicial del Cliente", onErrorValue=(0,0))
+def calcularPagoMinimoInicial(mensualidades: pd.DataFrame) -> tuple[int,float]:
+    """
+    Calcula el pago mínimo inicial del cliente.
+
+    Args:
+        mensualidades (pd.DataFrame): DataFrame que contiene las mensualidades.
+
+    Returns:
+        tuple:
+            int: El número de mensualidades que el cliente tiene pendientes por pagar.
+            float: El pago mínimo inicial del cliente.
+    """
+    # Definimos el Pago Mínimo Inicial del Cliente como el Monto_Mensualidad de la Primera Mensualidad a Pagar del Cliente
+    # Primero Filtramos las Mensualidades para Obtener Solo las Mensualidades que el Cliente Aún No ha Pagado (Status_Facturacion != "POR_COBRAR")
+    mensualidadesNoPagadas = mensualidades[mensualidades['Status_Facturacion'] != "POR_COBRAR"]
+    # Ahora Filtramos los Datos menores a Hoy
+    mensualidadesNoPagadasToday = mensualidadesNoPagadas[mensualidadesNoPagadas['Fecha_Mensualidad'] <= pd.Timestamp.today().normalize()]
+    # Obtenemos la Suma del Monto
+    montoTotalNoPagado = mensualidadesNoPagadasToday['Monto_Mensualidad'].sum()
+    # Obtenemos el Número de Mensualidades no Pagadas
+    numMensualidadesNoPagadas = len(mensualidadesNoPagadasToday)
+    # Finalmente, Devolvemos el Número de Mensualidades y el Monto no Pagado como el Pago Mínimo Inicial del Cliente
+    return numMensualidadesNoPagadas, montoTotalNoPagado

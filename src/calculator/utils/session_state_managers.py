@@ -7,8 +7,8 @@ from src.calculator.utils.logger_setup import notInfinteLog, debugLogger
 
 defaultValues = {
     'cliente_ref': 'Seleccionar Referencia',
-    'nuevo_apartado_mensual': 0.0,
-    'nuevo_pago_inicial': 0.0,
+    'nuevo_apartado_mensual': 1000,
+    'nuevo_pago_inicial': 1000,
 }
 
 # Función Auxiliar para Inicializar in Session State

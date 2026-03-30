@@ -273,7 +273,7 @@ def reorganizeDataAsInPagareForMonth(moras: pd.DataFrame, berex: pd.DataFrame, m
         pagareDict['Incumplimientos_Pagos'].append('Banco')
     # Añádimos Comisión si berexComision tiene Saldo_Pendiente > 0
     if berexComision['Saldo_Pendiente'].sum() > 0:
-        pagareDict['Incumplimientos_Pagos'].append('Comisión')
+        pagareDict['Incumplimientos_Pagos'].append('Comision')
     # Añádimos Mensualidad si mensualidades con Status_Facturacion == 'POR_COBRAR' tiene Monto_Mensualidad > 0
     if mensualidades[mensualidades['Status_Facturacion'] == 'POR_COBRAR']['Monto_Mensualidad'].sum() > 0:
         pagareDict['Incumplimientos_Pagos'].append('Mensualidad')
