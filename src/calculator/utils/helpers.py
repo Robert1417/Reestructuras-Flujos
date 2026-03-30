@@ -9,7 +9,7 @@ import numpy as np
 from typing import Tuple, Any, Callable
 
 # Importamos el Logger de Debugging
-from src.calculator.utils.logger_setup import notInfinteLog, logWrapper
+from src.calculator.utils.logger_setup import notInfiniteLog, logWrapper
 
 # Función Auxiliar para Obtener el Siguiente Día del Mes dado el Número de Día y el Timestamp
 @logWrapper(message="Error al Obtener el Siguiente Día del Mes", onErrorValue=pd.Timestamp.today().normalize())

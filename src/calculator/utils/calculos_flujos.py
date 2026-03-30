@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # Librerías de Ayuda
-from src.calculator.utils.logger_setup import notInfinteLog, logWrapper
+from src.calculator.utils.logger_setup import notInfiniteLog, logWrapper
 from src.calculator.utils.data_load import filterDataToToday, filterMensualidadesToOriginalBerex, emptyBerex
 
 # Librerías Adicionales

@@ -9,7 +9,7 @@ import numpy as np
 from typing import Tuple
 
 # Librerías de Ayuda
-from src.calculator.utils.logger_setup import notInfinteLog, logClassWrapper
+from src.calculator.utils.logger_setup import notInfiniteLog, logClassWrapper
 from src.calculator.utils.data_load import addSaldoPendienteToBerex, emptyBerex, filterDataByMonth
 from src.calculator.utils.helpers import getNextMonthDay
 
@@ -36,7 +36,7 @@ class FlujoTotal:
             float: El Valor Total Pagado por el Cliente
         """        
         montoPagado = self.moras['Pago'].sum()
-        notInfinteLog(f"Monto_Pagado_{self.ref}", f"El Monto Pagado por el Cliente es: {montoPagado}")
+        notInfiniteLog(f"Monto_Pagado_{self.ref}", f"El Monto Pagado por el Cliente es: {montoPagado}")
         return montoPagado
 
     # Método para Obtener el Flujo de Berex
@@ -90,7 +90,7 @@ class FlujoTotal:
             float: El Valor Total Por Cobrar al Cliente
         """
         montoPorCobrar = self.berex['Monto_Berex'].sum()
-        notInfinteLog(f"Monto_Por_Cobrar_{self.ref}", f"El Monto Por Cobrar al Cliente es: {montoPorCobrar}")
+        notInfiniteLog(f"Monto_Por_Cobrar_{self.ref}", f"El Monto Por Cobrar al Cliente es: {montoPorCobrar}")
         return montoPorCobrar
 
     # Método para Calcular el Monto_Mensualidad no Pagada por el Cliente
@@ -111,7 +111,7 @@ class FlujoTotal:
         # Ahora Filtramos las Mensualidades que Status_Facturacion == "POR_COBRAR"
         mensualidadesNoPagadas = mensualidadesNoPagadas[mensualidadesNoPagadas['Status_Facturacion'] == "POR_COBRAR"]
         montoNoPagado = mensualidadesNoPagadas['Monto_Mensualidad'].sum()
-        notInfinteLog(f"Monto_No_Pagado_{self.ref}", f"El Monto No Pagado por el Cliente es: {montoNoPagado}")
+        notInfiniteLog(f"Monto_No_Pagado_{self.ref}", f"El Monto No Pagado por el Cliente es: {montoNoPagado}")
         return montoNoPagado
 
     # Método para Obtener las Facturas No Pagadas por el Cliente
@@ -148,7 +148,7 @@ class FlujoTotal:
         """
         facturasNoPagadas = self.obtenerFacturasNoPagadas()
         montoBanco = facturasNoPagadas[facturasNoPagadas['Destino'] == 'Banco']['Saldo_Pendiente'].sum()
-        notInfinteLog(f"Monto_Banco_Facturas_No_Pagadas_{self.ref}", f"El Monto de Berex de las Facturas No Pagadas con Destino Banco es: {montoBanco}", method='debug')
+        notInfiniteLog(f"Monto_Banco_Facturas_No_Pagadas_{self.ref}", f"El Monto de Berex de las Facturas No Pagadas con Destino Banco es: {montoBanco}", method='debug')
         return montoBanco
     
     # Método para Obtener el Monto de Berex de las Facturas No Pagadas con Destino Comision
@@ -161,7 +161,7 @@ class FlujoTotal:
         """
         facturasNoPagadas = self.obtenerFacturasNoPagadas()
         montoComision = facturasNoPagadas[facturasNoPagadas['Destino'] == 'Comision']['Saldo_Pendiente'].sum()
-        notInfinteLog(f"Monto_Comision_Facturas_No_Pagadas_{self.ref}", f"El Monto de Berex de las Facturas No Pagadas con Destino Comision es: {montoComision}", method='debug')
+        notInfiniteLog(f"Monto_Comision_Facturas_No_Pagadas_{self.ref}", f"El Monto de Berex de las Facturas No Pagadas con Destino Comision es: {montoComision}", method='debug')
         return montoComision
 
     # Método para Obtener la Última Fecha de Pago del Cliente
@@ -173,14 +173,14 @@ class FlujoTotal:
             pd.Timestamp: La Última Fecha de Pago del Cliente
         """
         if self.moras.empty:
-            notInfinteLog(f"Ultima_Fecha_Pago_{self.ref}", f"No se han Encontrado Pagos por el Cliente, se Devuelve la Fecha Actual", method='debug')
+            notInfiniteLog(f"Ultima_Fecha_Pago_{self.ref}", f"No se han Encontrado Pagos por el Cliente, se Devuelve la Fecha Actual", method='debug')
             return pd.Timestamp.today().normalize()
         # Obtenemos las Facturas No Pagadas
         facturasNoPagadas = self.obtenerFacturasNoPagadas()
         if not facturasNoPagadas.empty:
             # Dejamos la Ultima Fecha de Pago como la Primera Factura sin Pagar, ya que eso Indica que el Cliente No ha Pagado esa Factura, por lo que la Última Fecha de Pago del Cliente sería la Fecha de Pago de esa Factura
             ultimaFechaPago = facturasNoPagadas['Fecha_Pago_Berex'].min()
-            notInfinteLog(f"Ultima_Fecha_Pago_{self.ref}", f"La Última Fecha de Pago del Cliente es: {ultimaFechaPago}", method='debug')
+            notInfiniteLog(f"Ultima_Fecha_Pago_{self.ref}", f"La Última Fecha de Pago del Cliente es: {ultimaFechaPago}", method='debug')
             return ultimaFechaPago
         return pd.Timestamp.today().normalize()
 
@@ -195,7 +195,7 @@ class FlujoTotal:
         Returns:
             pd.DataFrame: Un DataFrame con el Nuevo Flujo de Berex según la Reestructura
         """
-        notInfinteLog(f"calculating_nuevo_flujo_berex_{self.ref}", f"Calculando el Nuevo Flujo de Berex para la Referencia {self.ref} con los Parámetros: {paramsReestructura}")
+        notInfiniteLog(f"calculating_nuevo_flujo_berex_{self.ref}", f"Calculando el Nuevo Flujo de Berex para la Referencia {self.ref} con los Parámetros: {paramsReestructura}")
 
         # Guardamos los Párametros de la Reestructura
         self.paramsReestructura = paramsReestructura
@@ -215,11 +215,11 @@ class FlujoTotal:
         # Se Obtienen las Facturas No Pagadas por el Cliente
         facturasNoPagadas = self.obtenerFacturasNoPagadas()
         if facturasNoPagadas.empty:
-            notInfinteLog(f"nuevo_flujo_berex_{self.ref}", f"No se han Encontrado Facturas No Pagadas por el Cliente, el Nuevo Flujo de Berex será Igual al Flujo de Berex Original", method='debug')
+            notInfiniteLog(f"nuevo_flujo_berex_{self.ref}", f"No se han Encontrado Facturas No Pagadas por el Cliente, el Nuevo Flujo de Berex será Igual al Flujo de Berex Original", method='debug')
             self.nuevoFlujo = self.berex.copy()
             # Actualizamos el Motivo de No Viabilidad
             self.motivoNoViable = "No se han Encontrado Facturas No Pagadas por el Cliente, por lo que no se puede Realizar la Reestructura"
-            notInfinteLog(f"motivo_no_viable_{self.ref}", f"{self.motivoNoViable}", method='debug')
+            notInfiniteLog(f"motivo_no_viable_{self.ref}", f"{self.motivoNoViable}", method='debug')
             return self.nuevoFlujo
         
         # Se Obtienen los Saldos Pendientes de Comision y Banco de las Facturas No Pagadas por el Cliente
@@ -248,11 +248,11 @@ class FlujoTotal:
                 montoMensualidadesPendientes = self.calcularMensualidadesNoPagadas(currWindow)
                 # Si el Monto de las Mensualidades Pendientes supera el Monto de Pago Inicial, significa que no es Viable
                 if montoMensualidadesPendientes > montoInicalReestructura:
-                    notInfinteLog(f"nuevo_flujo_berex_{self.ref}", f"El Monto de Mensualidades Pendientes ({montoMensualidadesPendientes}) supera el Monto Inicial de la Reestructura ({montoInicalReestructura}), por lo que no es viable realizar la reestructura", method='debug')
+                    notInfiniteLog(f"nuevo_flujo_berex_{self.ref}", f"El Monto de Mensualidades Pendientes ({montoMensualidadesPendientes}) supera el Monto Inicial de la Reestructura ({montoInicalReestructura}), por lo que no es viable realizar la reestructura", method='debug')
                     self.nuevoFlujo = emptyBerex
                     # Actualizamos el Motivo de No Viabilidad
                     self.motivoNoViable = f"El Monto de Mensualidades Pendientes ({montoMensualidadesPendientes}) supera el Monto Inicial de la Reestructura ({montoInicalReestructura}), por lo que no es viable realizar la reestructura"
-                    notInfinteLog(f"motivo_no_viable_{self.ref}", f"{self.motivoNoViable}", method='debug')
+                    notInfiniteLog(f"motivo_no_viable_{self.ref}", f"{self.motivoNoViable}", method='debug')
                     return self.nuevoFlujo
                 # Como es la Primera Factura, el Saldo del Mes se Define como el Monto Inicial de la Reestructura más el Monto de las Mensualidades Pendientes, lo que Indica el Monto Total que el Cliente Puede Pagar en la Primera Factura
                 saldoMes = montoInicalReestructura
@@ -266,11 +266,11 @@ class FlujoTotal:
                 montoMensualidadesMes = mensualidadesMes[mensualidadesMes['Status_Facturacion'] == "POR_COBRAR"]['Monto_Mensualidad'].sum()
                 # Si el Monto de Mensualidades del Mes supera el Saldo del Mes, significa que no es Viable
                 if montoMensualidadesMes > saldoMes:
-                    notInfinteLog(f"nuevo_flujo_berex_{self.ref}", f"El Monto de Mensualidades del Mes ({montoMensualidadesMes}) supera el Saldo del Mes ({saldoMes}), por lo que no es viable realizar la reestructura", method='debug')
+                    notInfiniteLog(f"nuevo_flujo_berex_{self.ref}", f"El Monto de Mensualidades del Mes ({montoMensualidadesMes}) supera el Saldo del Mes ({saldoMes}), por lo que no es viable realizar la reestructura", method='debug')
                     self.nuevoFlujo = emptyBerex
                     # Actualizamos el Motivo de No Viabilidad
                     self.motivoNoViable = f"El Monto de Mensualidades del Mes ({montoMensualidadesMes}) supera el Saldo del Mes ({saldoMes}), por lo que no es viable realizar la reestructura"
-                    notInfinteLog(f"motivo_no_viable_{self.ref}", f"{self.motivoNoViable}", method='debug')
+                    notInfiniteLog(f"motivo_no_viable_{self.ref}", f"{self.motivoNoViable}", method='debug')
                     return self.nuevoFlujo
                 # Al Saldo del Mes se le quita el Monto Pendiente de las Mensualidades del Mes
                 saldoMes -= montoMensualidadesMes
@@ -288,7 +288,7 @@ class FlujoTotal:
                 nuevoFlujoDict['Monto_Berex'].append(maxBancoPayment)
                 nuevoFlujoDict['Destino'].append('Banco')
                 nuevoFlujoDict['Saldo_Pendiente'].append(0) # El Saldo Pendiente se Define como 0, ya que el Cliente Está Pagando el Monto Pendiente de Banco en este Mes
-                notInfinteLog(f"nuevo_flujo_berex_{self.ref}_Factura_{numeroFactura}", f"Se ha Agregado un Pago de Banco al Nuevo Flujo de Berex por un Monto de {maxBancoPayment} en la Fecha {currWindow}", method='debug')
+                notInfiniteLog(f"nuevo_flujo_berex_{self.ref}_Factura_{numeroFactura}", f"Se ha Agregado un Pago de Banco al Nuevo Flujo de Berex por un Monto de {maxBancoPayment} en la Fecha {currWindow}", method='debug')
                 numeroFactura += 1
             
             # Manejo de Saldo de Comision
@@ -304,7 +304,7 @@ class FlujoTotal:
                 nuevoFlujoDict['Monto_Berex'].append(maxComisionPayment)
                 nuevoFlujoDict['Destino'].append('Comision')
                 nuevoFlujoDict['Saldo_Pendiente'].append(0) # El Saldo Pendiente se Define como 0, ya que el Cliente Está Pagando el Monto Pendiente de Comision en este Mes
-                notInfinteLog(f"nuevo_flujo_berex_{self.ref}_Factura_{numeroFactura}", f"Se ha Agregado un Pago de Comision al Nuevo Flujo de Berex por un Monto de {maxComisionPayment} en la Fecha {currWindow}", method='debug')
+                notInfiniteLog(f"nuevo_flujo_berex_{self.ref}_Factura_{numeroFactura}", f"Se ha Agregado un Pago de Comision al Nuevo Flujo de Berex por un Monto de {maxComisionPayment} en la Fecha {currWindow}", method='debug')
                 numeroFactura += 1
 
             # Se Actualiza el Monto Pendiente Restando el Pago Total del Mes (Banco + Comision)
@@ -320,5 +320,5 @@ class FlujoTotal:
         # El Flujo Nuevo en Sí seran las Facturas Pagadas + el Nuevo Flujo de Berex
         self.nuevoFlujo = pd.concat([self.obtenerFacturasPagadas(), nuevoFlujo], ignore_index=True).sort_values(by='Fecha_Pago_Berex').reset_index(drop=True)
 
-        notInfinteLog(f"nuevo_flujo_berex_{self.ref}", f"Se ha Calculado el Nuevo Flujo de Berex para la Referencia {self.ref}", method='debug')
+        notInfiniteLog(f"nuevo_flujo_berex_{self.ref}", f"Se ha Calculado el Nuevo Flujo de Berex para la Referencia {self.ref}", method='debug')
         return self.nuevoFlujo

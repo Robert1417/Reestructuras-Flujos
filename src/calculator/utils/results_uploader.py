@@ -3,7 +3,7 @@ import streamlit as st
 import json
 
 # Librerías de Ayuda
-from src.calculator.utils.logger_setup import notInfinteLog
+from src.calculator.utils.logger_setup import notInfiniteLog
 
 # Librerías de Autennticación de Google Sheets
 import gspread
@@ -35,7 +35,7 @@ def getWorksheet(spreadsheet_id: str, sheet_name: str = "Logs"):
         worksheet = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
         return worksheet
     except Exception as e:
-        notInfinteLog(f'sheets_connection_error_{spreadsheet_id}_{sheet_name}', f'Error al conectar con Google Sheets: {e}', method='error')
+        notInfiniteLog(f'sheets_connection_error_{spreadsheet_id}_{sheet_name}', f'Error al conectar con Google Sheets: {e}', method='error')
         return None
 
 # Creamos Función para Añadir una Fila a la Hoja de Cálculo
@@ -44,4 +44,4 @@ def appendRowToSheet(worksheet, row: list):
         try:
             worksheet.append_row(row)
         except Exception as e:
-            notInfinteLog(f'sheets_append_error_{worksheet.id}', f'Error al añadir fila a Google Sheets: {e}', method='error')
+            notInfiniteLog(f'sheets_append_error_{worksheet.id}', f'Error al añadir fila a Google Sheets: {e}', method='error')

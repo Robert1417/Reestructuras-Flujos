@@ -8,7 +8,7 @@ from typing import Tuple
 
 # Librerías de Ayuda
 from src.calculator.utils.session_state_managers import updateSessionState
-from src.calculator.utils.logger_setup import logWrapper, notInfinteLog
+from src.calculator.utils.logger_setup import logWrapper, notInfiniteLog
 
 # Definimos las Columnas Existentes en Cada uno de los DFs
 columnasMoras = ['Referencia','Fecha','Fecha_Origen','Por_Cobrar','Pago','Status_Mora']
@@ -106,7 +106,7 @@ def cleanMoras(dfMoras: pd.DataFrame) -> pd.DataFrame:
     # Organizamos el DF por Referencia y Fecha
     dfMoras = dfMoras.sort_values(by=['Referencia', 'Fecha']).reset_index(drop=True)
     # Devolvemos el DF Limpio
-    notInfinteLog('cleaned_moras', 'Datos de moras limpiados correctamente', method='debug')
+    notInfiniteLog('cleaned_moras', 'Datos de moras limpiados correctamente', method='debug')
     return dfMoras
 
 # Función Auxiliar para limpiar el Flujo de Berex
@@ -127,7 +127,7 @@ def cleanFlujoBerex(dfFlujo: pd.DataFrame, moras: pd.DataFrame) -> pd.DataFrame:
     # Añadimos la Columna de Saldo_Pendiente al Flujo de Berex
     dfFlujo = addSaldoPendienteToBerexMassive(dfFlujo, moras)
     # Devolvemos el DF Limpio
-    notInfinteLog('cleaned_flujo_berex', 'Datos del flujo de Berex limpiados correctamente', method='debug')
+    notInfiniteLog('cleaned_flujo_berex', 'Datos del flujo de Berex limpiados correctamente', method='debug')
     return dfFlujo
 
 # Función Auxiliar para limpiar los Datos de Mensualidades
@@ -146,7 +146,7 @@ def cleanMensualidades(dfMensualidades: pd.DataFrame) -> pd.DataFrame:
     # Organizamos el DF por Referencia y Fecha_Cobro
     dfMensualidades = dfMensualidades.sort_values(by=['Referencia', 'Fecha_Cobro']).reset_index(drop=True)
     # Devolvemos el DF Limpio
-    notInfinteLog('cleaned_mensualidades', 'Datos de mensualidades limpiados correctamente', method='debug')
+    notInfiniteLog('cleaned_mensualidades', 'Datos de mensualidades limpiados correctamente', method='debug')
     return dfMensualidades
 
 # --- Carga General de Datos ---
@@ -160,14 +160,14 @@ def loadData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         moras = pd.read_parquet('data/moras.parquet')
         berex = pd.read_parquet('data/cartera.parquet')
         mensualidades = pd.read_parquet('data/mensualidades.parquet')
-        notInfinteLog('loaded_data', 'Datos cargados correctamente', method='debug')
+        notInfiniteLog('loaded_data', 'Datos cargados correctamente', method='debug')
         # Limpiamos los DFs
         moras = cleanMoras(moras)
         berex = cleanFlujoBerex(berex, moras)
         mensualidades = cleanMensualidades(mensualidades)
         return moras, berex, mensualidades
     except Exception as e:
-        notInfinteLog('error_loading_data', f'Error al cargar los datos: {e}', method='error')
+        notInfiniteLog('error_loading_data', f'Error al cargar los datos: {e}', method='error')
         return emptyMoras, emptyBerex, emptyMensualidades
 
 # Función Auxiliar para cargar los datos de prueba de la calculadora
@@ -178,14 +178,14 @@ def loadTestData() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         moras = pd.read_parquet('data/tests/test_berex.parquet')
         berex = pd.read_parquet('data/tests/test_cartera.parquet')
         mensualidades = pd.read_parquet('data/tests/test_mensualidades.parquet')
-        notInfinteLog('loaded_test_data', 'Datos de prueba cargados correctamente', method='debug')
+        notInfiniteLog('loaded_test_data', 'Datos de prueba cargados correctamente', method='debug')
         # Limpiamos los DFs
         moras = cleanMoras(moras)
         mensualidades = cleanMensualidades(mensualidades)
         berex = cleanFlujoBerex(berex, moras)
         return moras, berex, mensualidades
     except Exception as e:
-        notInfinteLog('error_loading_test_data', f'Error al cargar los datos de prueba: {e}', method='error')
+        notInfiniteLog('error_loading_test_data', f'Error al cargar los datos de prueba: {e}', method='error')
         return emptyMoras, emptyBerex, emptyMensualidades
 
 # Función Auxiliar para cargar los Parametros de Prueba
@@ -195,10 +195,10 @@ def loadTestParams() -> dict:
         # Cargamos los Parámetros de Prueba
         with open('data/tests/test_params.json', 'r') as f:
             params = json.load(f)
-        notInfinteLog('loaded_test_params', 'Parámetros de prueba cargados correctamente', method='debug')
+        notInfiniteLog('loaded_test_params', 'Parámetros de prueba cargados correctamente', method='debug')
         return params
     except Exception as e:
-        notInfinteLog('error_loading_test_params', f'Error al cargar los parámetros de prueba: {e}', method='error')
+        notInfiniteLog('error_loading_test_params', f'Error al cargar los parámetros de prueba: {e}', method='error')
         return {}
 
 # --- Filtrado de Datos ---
@@ -215,7 +215,7 @@ def filterDataToToday(moras: pd.DataFrame, berex: pd.DataFrame, mensualidades: p
     # Se realiza el replace por si el día de hoy es el último día del mes, para que tome los datos de este mes completo
     today_month_end = today.replace(day=1) + pd.offsets.MonthEnd(0)
     mensualidades = mensualidades[mensualidades['Fecha_Cobro'] <= today]
-    notInfinteLog('filtered_data_to_today', 'Datos filtrados a día de hoy correctamente', method='debug')
+    notInfiniteLog('filtered_data_to_today', 'Datos filtrados a día de hoy correctamente', method='debug')
     return moras, berex, mensualidades
 
 # Función Auxiliar para filtrar las Mensualidades presentes en el flujo Original de Berex, es decir, solo las mensualidades que no sobrepasenFecha_Pago_Berex.max()
@@ -227,7 +227,7 @@ def filterMensualidadesToOriginalBerex(mensualidades: pd.DataFrame, berex: pd.Da
     max_fecha_pago_berex = max_fecha_pago_berex.replace(day=1) + pd.offsets.MonthBegin(0)
     # Filtramos las Mensualidades para quedarnos solo con las que tengan Fecha_Cobro menor a la Fecha_Pago_Berex máxima
     mensualidades_filtradas = mensualidades[mensualidades['Fecha_Cobro'] < max_fecha_pago_berex]
-    notInfinteLog('filtered_mensualidades_to_original_berex', 'Mensualidades filtradas al flujo original de Berex correctamente', method='debug')
+    notInfiniteLog('filtered_mensualidades_to_original_berex', 'Mensualidades filtradas al flujo original de Berex correctamente', method='debug')
     return mensualidades_filtradas
 
 # Función Auxiliar para Filtrar Datos de un Mes dado el Timestamp
@@ -235,7 +235,7 @@ def filterMensualidadesToOriginalBerex(mensualidades: pd.DataFrame, berex: pd.Da
 def filterDataByMonth(df: pd.DataFrame, dateColumn: str, month: pd.Timestamp) -> pd.DataFrame:
     # Filtramos los DFs para quedarnos solo con los Datos del Mes dado
     df = df[(df[dateColumn].dt.year == month.year) & (df[dateColumn].dt.month == month.month)]
-    notInfinteLog(f'filtered_data_by_month_{dateColumn}', f'Datos filtrados por mes: {month.strftime("%Y-%m")}', method='debug')
+    notInfiniteLog(f'filtered_data_by_month_{dateColumn}', f'Datos filtrados por mes: {month.strftime("%Y-%m")}', method='debug')
     return df
 
 # --- Reorganización de Datos ---
@@ -316,5 +316,5 @@ def reorganizeDataAsInPagare(moras: pd.DataFrame, berex: pd.DataFrame, mensualid
     # Una vez que se ha Reorganizado toda la Información, se Crea el DF del Pagaré a Partir del Diccionario del Pagaré
     pagare = pd.DataFrame(pagareDict)
     # Devolvemos el DF del Pagaré Reorganizado
-    notInfinteLog('reorganized_data_as_in_pagare', 'Datos reorganizados como en el pagaré correctamente', method='debug')
+    notInfiniteLog('reorganized_data_as_in_pagare', 'Datos reorganizados como en el pagaré correctamente', method='debug')
     return pagare

@@ -5,7 +5,7 @@ import numpy as np
 
 # Librerías de Ayuda
 from src.calculator.utils.data_load import loadTestData, loadTestParams
-from src.calculator.utils.session_state_managers import initializeSessionState, getSessionStateWithDefault
+from src.calculator.utils.session_state_managers import initializeSessionState, getSessionStateWithDefault, updateSessionState
 from src.calculator.ui.components import mostrarFlujoBerexYMetricas, mostrarParametrosReestructura, mostrarNuevoFlujo
 from src.calculator.core.flujos import FlujoTotal
 
@@ -22,6 +22,8 @@ def main():
     # Definimos las Referencias Únicas y las Guardamos en el Session State
     referenciasUnicas = list(morasDF['Referencia'].unique())
     initializeSessionState('referencias_unicas_test', referenciasUnicas)
+    # Actualizamos el Session State de accion_user a False para Evitar Logs Innecesarios
+    updateSessionState('accion_user', False)
 
     # --- Configuración de la Página ---
     st.set_page_config(

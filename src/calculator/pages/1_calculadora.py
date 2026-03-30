@@ -7,6 +7,7 @@ import pandas as pd
 # Librerías de Ayuda
 from src.calculator.utils.session_state_managers import updateSessionState, initializeSessionState, areSessionStatesValid
 from src.calculator.utils.data_load import loadData
+from src.calculator.utils.logger_setup import notInfiniteLog
 from src.calculator.ui.components import mostrarFlujoBerexYMetricas, mostrarParametrosReestructura, mostrarNuevoFlujo
 
 # Definimos la Ejecución Inicial de la Aplicación
@@ -120,4 +121,5 @@ def main():
 
 # En este caso es diferente ya que no es el archivo principal de Ejecución, sino una página inicial
 if __name__ != "__main__":
+    notInfiniteLog('user_enter_calculadora', 'La página de la calculadora ha sido abierta por el usuario') # Logueamos la Primera Ejecución de la Página Principal de la Calculadora
     main()
