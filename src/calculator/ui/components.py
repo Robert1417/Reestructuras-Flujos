@@ -48,7 +48,7 @@ def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensual
     with col1:
         st.subheader("Flujo de Berex")
         # Mostramos los Datos de Berex
-        st.dataframe(estilizarBerex(berex), use_container_width=True)
+        st.dataframe(estilizarBerex(berex), width='stretch')
 
     # En la Columna 2, Mostramos las Métricas Calculadas
     with col2:
@@ -75,7 +75,7 @@ def mostrarPagare(pagare: pd.DataFrame, subheader: str = "Pagaré") -> None:
         pagare (pd.DataFrame): DataFrame que contiene los datos del pagaré.
     """
     st.subheader(subheader)
-    st.dataframe(estilizarPagare(pagare), use_container_width=True)
+    st.dataframe(estilizarPagare(pagare), width='stretch')
 
 # Función Auxiliar para Mostrar los Párametros de la Reestructura
 @stWarningLogWrapper(message="Error al mostrar los Parámetros de la Reestructura")

@@ -1,5 +1,6 @@
 # Librerías Core
 import streamlit as st
+import pandas as pd
 from typing import Any, Callable
 
 # Librerías de Ayuda
@@ -9,6 +10,7 @@ defaultValues = {
     'cliente_ref': 'Seleccionar Referencia',
     'nuevo_apartado_mensual': 1000,
     'nuevo_pago_inicial': 1000,
+    'fecha_inicio_pago': pd.Timestamp.now().date(),
 }
 
 # Función Auxiliar para Inicializar in Session State
@@ -17,6 +19,13 @@ def initializeSessionState(key: str, value) -> None:
         st.session_state[key] = value
         notInfiniteLog(f'initialized_{key}', f'Session state inicializado: {key} = {value}', method='debug')
 
+# Función Auxiliar para Inicializar los Session States Necesarios para la Aplicación
+def initializeRequiredSessionStates() -> None:
+    initializeSessionState('cliente_ref', defaultValues['cliente_ref'])
+    initializeSessionState('nuevo_apartado_mensual', defaultValues['nuevo_apartado_mensual'])
+    initializeSessionState('nuevo_pago_inicial', defaultValues['nuevo_pago_inicial'])
+    initializeSessionState('fecha_inicio_pago', defaultValues['fecha_inicio_pago'])
+
 # Función Auxiliar para saber si un Session State está definido
 def isSessionStateDefined(key: str) -> bool:
     return key in st.session_state
@@ -24,7 +33,7 @@ def isSessionStateDefined(key: str) -> bool:
 # Función Auxiliar para Actualizar un Session State
 def updateSessionState(key: str, value: Any) -> bool:
     try:
-        originalValue = st.session_state.get(key, None)
+        originalValue = st.session_state.get(key)
         st.session_state[key] = value
         return originalValue != value  # Retorna True si el valor fue actualizado, False si el valor no cambió
     except Exception as e:

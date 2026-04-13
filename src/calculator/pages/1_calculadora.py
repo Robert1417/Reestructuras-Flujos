@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 
 # Librerías de Ayuda
-from src.calculator.utils.session_state_managers import updateSessionState, initializeSessionState, areSessionStatesValid
+from src.calculator.utils.session_state_managers import updateSessionState, initializeSessionState, areSessionStatesValid, initializeRequiredSessionStates
 from src.calculator.utils.data_load import loadData
 from src.calculator.utils.logger_setup import notInfiniteLog
 from src.calculator.ui.components import mostrarFlujoBerexYMetricas, mostrarParametrosReestructura, mostrarNuevoFlujo
@@ -34,7 +34,7 @@ def main():
     # Agreamos un Imput de Número para Obtener la Referencia del Cliente
     cliente_ref = st.sidebar.selectbox(
         "Ingrese la Referencia del Cliente",
-        ['Seleccionar Referencia'] + st.session_state['refs_unicas']
+        ['Seleccionar Referencia'] + st.session_state['refs_unicas'],
         )
 
     # Actualizamos el Session State con la Referencia del Cliente
@@ -43,7 +43,7 @@ def main():
     # Creamos un Input de Fecha para Obtener la Fecha Inicial de Pago
     fecha_inicio_pago = pd.Timestamp(st.sidebar.date_input(
         "Ingrese la Fecha Inicial de Pago",
-        value=pd.Timestamp.now().date()
+        value=pd.Timestamp.now().date(),
         )
     )
     # Actualizamos el Session State con la Fecha Inicial de Pago
@@ -119,7 +119,7 @@ def main():
     # Esto se realiza para que solo en los frames que existe una acción se muestren los logs
     updateSessionState('accion_user', False)
 
-# En este caso es diferente ya que no es el archivo principal de Ejecución, sino una página inicial
-if __name__ != "__main__":
+if __name__ == "__main__":
     notInfiniteLog('user_enter_calculadora', 'La página de la calculadora ha sido abierta por el usuario') # Logueamos la Primera Ejecución de la Página Principal de la Calculadora
+    initializeRequiredSessionStates()
     main()

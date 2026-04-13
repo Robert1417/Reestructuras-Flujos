@@ -13,7 +13,7 @@ def main():
     # Primero Obtenemos los Datos
     # --- Carga de Datos ---
     # Cargamos los Datos de Moras y Mensualidades utilizando la Función Cargada en helpers.py
-    dfMoras, dfMensualidades, dfFlujoBerex = loadData() # No es Necesario Realizar Cambios porque ya usa Cache
+    dfMoras, dfFlujoBerex, dfMensualidades = loadData() # No es Necesario Realizar Cambios porque ya usa Cache
 
     # Actualizamos el Session State de accion_user a False para Evitar Logs Innecesarios
     updateSessionState('accion_user', False)
@@ -46,7 +46,6 @@ def main():
     st.header('Datos de Mensualidades')
     st.dataframe(dfMensualidades)
 
-# Como no es app.py, sino una página de la calculadora, no se ejecutará directamente, sino que se importará en app.py, por lo que no se usará el if __name__ == "__main__" para Ejecutar la Función main(), sino que se usará un if __name__ != "__main__" para Ejecutar la Función main() solo cuando se importe el archivo, lo que indica que el usuario ha entrado a la página de verificación de datos
-if __name__ != "__main__":
+if __name__ == "__main__":
     notInfiniteLog('user_enter_verificacion', 'La página verificacion ha sido abierta por el usuario')
     main()

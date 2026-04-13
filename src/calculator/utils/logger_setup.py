@@ -6,6 +6,7 @@ from pathlib import Path
 
 # Librerías Adicionales
 from typing import Callable, Any
+from functools import wraps
 import json
 
 @st.cache_resource
@@ -34,45 +35,59 @@ def setup_logging():
 debugLogger = setup_logging()
 debugLogger.info("Logger Inicializado y Listo para Usar en la Calculadora.")
 
-# Función Auxiliar para Evitar Logs por cada Ejecución de la Calculadora, Solo se Logueará la Primera Ejecución o 
-# Si existe un cambio en Acción del cliente (el session_state de accion_user cambia a True)
 def notInfiniteLog(name: str, message: str, method: str = 'info') -> None:
-    # Primera Verificación: El Session state de name no existe, lo que indica que es la primera ejecución de la calculadora, por lo que se loguea el mensaje
-    if name not in st.session_state:
-        getattr(debugLogger, method)(message)  # Se loguea el mensaje utilizando el método especificado (info, debug, warning, error)
-        st.session_state[name] = True  # Se establece el session state para evitar logs futuros
-        return # Para Finalizar la Ejecución de la Función
-    # Segunda Verificación: El Session state de name existe y el session_state de accion_user es True, lo que indica que el cliente ha realizado una acción, por lo que se loguea el mensaje
-    if st.session_state.get('accion_user', False):
-        getattr(debugLogger, method)(message)  # Se loguea el mensaje utilizando el método especificado (info, debug, warning, error)
-        return # Para Finalizar la Ejecución de la Función
-    # Si ninguna de las condiciones anteriores se cumple, no se loguea el mensaje para evitar logs infinitos por cada ejecución de la calculadora sin acciones del cliente
-    notInfiniteLog(f'ignored_{name}', f'Mensaje ignorado: {message}', method='debug')
+    # 1. Obtener el logger de forma segura
+    logger_func = getattr(debugLogger, method, debugLogger.info)
+    
+    # 2. Variable para decidir si logueamos
+    should_log = False
 
-# Ahora Creamos una Función que sirva como Decorator de Errores
+    # Caso A: Primera vez que se ejecuta para este "name"
+    if name not in st.session_state:
+        st.session_state[name] = True
+        should_log = True
+    
+    # Caso B: El usuario realizó una acción manual
+    elif st.session_state.get('accion_user', False):
+        should_log = True
+        # IMPORTANTE: Resetear el flag para que no loguee infinitamente en el próximo rerun
+        st.session_state['accion_user'] = False
+
+    # 3. Ejecución del log
+    if should_log:
+        logger_func(message)
+
 def logWrapper(message: str, onErrorValue: Any = None) -> Callable:
     def middleWrapper(func: Callable) -> Callable:
+        @wraps(func)  # <--- Esto preserva la identidad de la función original
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
+                # Usamos el nombre original gracias a @wraps o func.__name__
                 notInfiniteLog(f'error_{func.__name__}', f'{message}: {e}', method='error')
                 return onErrorValue
         return wrapper
     return middleWrapper
 
-# Función Decoradora Auxiliar para manejar Errores de Funciones de Clases
 def logClassWrapper(message: str, onErrorValue: Any = None) -> Callable:
     def middleWrapper(func: Callable) -> Callable:
+        @wraps(func)
         def wrapper(self, *args, **kwargs):
             try:
                 return func(self, *args, **kwargs)
             except Exception as e:
-                notInfiniteLog(f'error_{self.__class__.__name__}_{func.__name__}', f'{message} en {self.__class__.__name__}: {e}', method='error')
+                # Nombre de la clase para el log y el session_state
+                class_name = self.__class__.__name__
+                log_key = f'error_{class_name}_{func.__name__}'
+                log_msg = f'{message} en {class_name}: {e}'
+                
+                # Llamada a tu función auxiliar de logs
+                notInfiniteLog(log_key, log_msg, method='error')
+                
                 return onErrorValue
         return wrapper
     return middleWrapper
-
 
 # Creamos un Decorador para Mostrar una Warning de Streamlit ante algún error en la función decorada, además de loguear el error utilizando el logWrapper
 def stWarningLogWrapper(message: str) -> Callable:

@@ -10,7 +10,7 @@ from src.calculator.utils.data_load import emptyBerex, emptyPagare
 
 # Función Auxiliar para Estilizar el DataFrame de Berex
 @stWarningLogWrapper(message="Error al estilizar el DataFrame de Berex")
-def estilizarBerex(berex: pd.DataFrame) -> pd.io.formats.style.Styler:
+def estilizarBerex(berex: pd.DataFrame):
     """
     Estiliza el DataFrame de Berex para su visualización en la aplicación.
 
@@ -34,7 +34,7 @@ def estilizarBerex(berex: pd.DataFrame) -> pd.io.formats.style.Styler:
 
 # Función Auxiliar para Estilizar el DataFrame de Pagaré
 @stWarningLogWrapper(message="Error al estilizar el DataFrame de Pagaré")
-def estilizarPagare(pagare: pd.DataFrame) -> pd.io.formats.style.Styler:
+def estilizarPagare(pagare: pd.DataFrame):
     """
     Estiliza el DataFrame de Pagaré para su visualización en la aplicación.
 
