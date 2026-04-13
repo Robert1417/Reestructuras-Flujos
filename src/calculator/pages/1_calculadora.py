@@ -113,7 +113,10 @@ def main():
             st.warning("Algunos Parámetros estan sin Definir, por favor Definir dichos parámetros para Mostrar el Nuevo Flujo Calculado.")
 
     else:
-        st.warning("No se encontraron datos de Moras o Flujo de Berex para la Referencia del Cliente seleccionada. Por favor, seleccione una referencia válida.")
+        if cliente_ref != 'Seleccionar Referencia':
+            st.warning("No se encontraron datos de Moras o Flujo de Berex para la Referencia del Cliente seleccionada. Por favor, seleccione una referencia válida.")
+        else:
+            st.info("Por favor, seleccione una Referencia de Cliente para Mostrar el Flujo de Berex, las Métricas y el Nuevo Flujo Calculado.")
 
     # Actualizamos de nuevo el Session State de accion_user a False
     # Esto se realiza para que solo en los frames que existe una acción se muestren los logs
