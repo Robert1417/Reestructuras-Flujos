@@ -19,15 +19,24 @@ def estilizarBerex(berex: pd.DataFrame):
     """
     if berex.empty:
         return pd.io.formats.style.Styler(emptyBerex)
+
+    # Aseguramos la columna requerida por el estilo, incluso en flujos parciales/fallbacks
+    if 'Saldo_Pendiente' not in berex.columns:
+        berex = berex.copy()
+        berex['Saldo_Pendiente'] = 0
+    
+    # Dejamos Saldo_Pendiente y Monto_Berex redondeados a 2 decimales para una mejor visualización
+    berex['Saldo_Pendiente'] = berex['Saldo_Pendiente'].round(2)
+    berex['Monto_Berex'] = berex['Monto_Berex'].round(2)
     
     # Definimos la Función de Estilo para el DataFrame de Berex
     def styleBerex(row):
-        if row['Saldo Pendiente'] > 0:
-            # Agregamos Color Rojo para las Filas con Saldo Pendiente Mayor a 0
-            return ['background-color: #ffcccc'] * len(row)
+        if row['Saldo_Pendiente'] > 0:
+            # Agregamos Color Rojo para las Filas con Saldo_Pendiente Mayor a 0
+            return ['background-color: #ffcccc; color: #000000'] * len(row)
         else:
-            # Agregamos Color Verde para las Filas con Saldo Pendiente Igual a 0
-            return ['background-color: #ccffcc'] * len(row)
+            # Agregamos Color Verde para las Filas con Saldo_Pendiente Igual a 0
+            return ['background-color: #ccffcc; color: #000000'] * len(row)
 
     berexStyled =  berex.style.apply(styleBerex, axis=1)
     return berexStyled
@@ -58,37 +67,37 @@ def estilizarPagare(pagare: pd.DataFrame):
         # Formatos Condicionales para Pagos
         # 1. Incumplimiento de Pago a Banco
         if 'Banco' in incumplimientos:
-            styles[pagare.columns.get_loc('Monto PaB')] = 'background-color: #ffcccc' # type: ignore
-            styles[pagare.columns.get_loc('Fecha PaB')] = 'background-color: #ffcccc' # type: ignore
+            styles[pagare.columns.get_loc('Monto PaB')] = 'background-color: #ffcccc; color: #000000' # type: ignore
+            styles[pagare.columns.get_loc('Fecha PaB')] = 'background-color: #ffcccc; color: #000000' # type: ignore
         else:
-            styles[pagare.columns.get_loc('Monto PaB')] = 'background-color: #ccffcc' # type: ignore
-            styles[pagare.columns.get_loc('Fecha PaB')] = 'background-color: #ccffcc' # type: ignore
+            styles[pagare.columns.get_loc('Monto PaB')] = 'background-color: #ccffcc; color: #000000' # type: ignore
+            styles[pagare.columns.get_loc('Fecha PaB')] = 'background-color: #ccffcc; color: #000000' # type: ignore
         # 2. Incumplimiento de Pago de Comisión
         if 'Comision' in incumplimientos:
-            styles[pagare.columns.get_loc('Monto Comision')] = 'background-color: #ffcccc' # type: ignore
-            styles[pagare.columns.get_loc('Fecha Comision')] = 'background-color: #ffcccc' # type: ignore
+            styles[pagare.columns.get_loc('Monto Comision')] = 'background-color: #ffcccc; color: #000000' # type: ignore
+            styles[pagare.columns.get_loc('Fecha Comision')] = 'background-color: #ffcccc; color: #000000' # type: ignore
         else:
-            styles[pagare.columns.get_loc('Monto Comision')] = 'background-color: #ccffcc' # type: ignore
-            styles[pagare.columns.get_loc('Fecha Comision')] = 'background-color: #ccffcc' # type: ignore
+            styles[pagare.columns.get_loc('Monto Comision')] = 'background-color: #ccffcc; color: #000000' # type: ignore
+            styles[pagare.columns.get_loc('Fecha Comision')] = 'background-color: #ccffcc; color: #000000' # type: ignore
         # 3. Incumplimiento de Pago de Mensualidad
         if 'Mensualidad' in incumplimientos:
-            styles[pagare.columns.get_loc('Monto Mensualidad')] = 'background-color: #ffcccc' # type: ignore
-            styles[pagare.columns.get_loc('Fecha Mensualidad')] = 'background-color: #ffcccc' # type: ignore
+            styles[pagare.columns.get_loc('Monto Mensualidad')] = 'background-color: #ffcccc; color: #000000' # type: ignore
+            styles[pagare.columns.get_loc('Fecha Mensualidad')] = 'background-color: #ffcccc; color: #000000' # type: ignore
         else:
-            styles[pagare.columns.get_loc('Monto Mensualidad')] = 'background-color: #ccffcc' # type: ignore
-            styles[pagare.columns.get_loc('Fecha Mensualidad')] = 'background-color: #ccffcc' # type: ignore
+            styles[pagare.columns.get_loc('Monto Mensualidad')] = 'background-color: #ccffcc; color: #000000' # type: ignore
+            styles[pagare.columns.get_loc('Fecha Mensualidad')] = 'background-color: #ccffcc; color: #000000' # type: ignore
 
-        # Estilo de Saldo Pendiente: Si el Saldo Pendiente es Mayor a 0, lo Resaltamos en Rojo, Sino en Verde
+        # Estilo de Saldo_Pendiente: Si el Saldo_Pendiente es Mayor a 0, lo Resaltamos en Rojo, Sino en Verde
         if row['Saldo_Pendiente'] > 0:
-            styles[pagare.columns.get_loc('Saldo_Pendiente')] = 'background-color: #ffcccc' # type: ignore
+            styles[pagare.columns.get_loc('Saldo_Pendiente')] = 'background-color: #ffcccc; color: #000000' # type: ignore
         else:
-            styles[pagare.columns.get_loc('Saldo_Pendiente')] = 'background-color: #ccffcc' # type: ignore
+            styles[pagare.columns.get_loc('Saldo_Pendiente')] = 'background-color: #ccffcc; color: #000000' # type: ignore
 
         # Estilo de Incumplimientos de Pagos: Si hay Incumplimientos, lo Resaltamos en Rojo, Sino en Verde
         if not 'Ninguno' in incumplimientos:
-            styles[pagare.columns.get_loc('Incumplimientos_Pagos')] = 'background-color: #ffcccc' # type: ignore
+            styles[pagare.columns.get_loc('Incumplimientos_Pagos')] = 'background-color: #ffcccc; color: #000000' # type: ignore
         else:
-            styles[pagare.columns.get_loc('Incumplimientos_Pagos')] = 'background-color: #ccffcc' # type: ignore
+            styles[pagare.columns.get_loc('Incumplimientos_Pagos')] = 'background-color: #ccffcc; color: #000000' # type: ignore
 
         return styles
 

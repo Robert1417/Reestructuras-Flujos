@@ -19,7 +19,7 @@ def main():
 
     # --- Carga de Datos ---
     # Cargamos los Datos de Moras y Mensualidades utilizando la Función Cargada en helpers.py
-    dfMoras, dfMensualidades, dfFlujoBerex = loadData() # No es Necesario Realizar Cambios porque ya usa Cache
+    dfMoras, dfFlujoBerex, dfMensualidades = loadData() # No es Necesario Realizar Cambios porque ya usa Cache
 
     # Inicalizamos Session State de Referencias Únicas
     initializeSessionState('refs_unicas',dfMoras['Referencia'].unique().tolist())

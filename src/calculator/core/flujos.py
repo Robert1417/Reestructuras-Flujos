@@ -287,7 +287,7 @@ class FlujoTotal:
                 nuevoFlujoDict['Fecha_Pago_Berex'].append(currWindow)
                 nuevoFlujoDict['Monto_Berex'].append(maxBancoPayment)
                 nuevoFlujoDict['Destino'].append('Banco')
-                nuevoFlujoDict['Saldo_Pendiente'].append(0) # El Saldo Pendiente se Define como 0, ya que el Cliente Está Pagando el Monto Pendiente de Banco en este Mes
+                nuevoFlujoDict['Saldo_Pendiente'].append(0) # El Saldo_Pendiente se Define como 0, ya que el Cliente Está Pagando el Monto Pendiente de Banco en este Mes
                 notInfiniteLog(f"nuevo_flujo_berex_{self.ref}_Factura_{numeroFactura}", f"Se ha Agregado un Pago de Banco al Nuevo Flujo de Berex por un Monto de {maxBancoPayment} en la Fecha {currWindow}", method='debug')
                 numeroFactura += 1
             
@@ -303,7 +303,7 @@ class FlujoTotal:
                 nuevoFlujoDict['Fecha_Pago_Berex'].append(currWindow)
                 nuevoFlujoDict['Monto_Berex'].append(maxComisionPayment)
                 nuevoFlujoDict['Destino'].append('Comision')
-                nuevoFlujoDict['Saldo_Pendiente'].append(0) # El Saldo Pendiente se Define como 0, ya que el Cliente Está Pagando el Monto Pendiente de Comision en este Mes
+                nuevoFlujoDict['Saldo_Pendiente'].append(0) # El Saldo_Pendiente se Define como 0, ya que el Cliente Está Pagando el Monto Pendiente de Comision en este Mes
                 notInfiniteLog(f"nuevo_flujo_berex_{self.ref}_Factura_{numeroFactura}", f"Se ha Agregado un Pago de Comision al Nuevo Flujo de Berex por un Monto de {maxComisionPayment} en la Fecha {currWindow}", method='debug')
                 numeroFactura += 1
 

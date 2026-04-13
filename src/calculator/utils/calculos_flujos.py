@@ -78,8 +78,8 @@ def calcularMetricasFlujos(moras: pd.DataFrame, berex: pd.DataFrame, mensualidad
     # 4. Calculamos el Porcentaje de Pago del Cliente
     porcentajePago = round(pagoActualCliente / valorTotalPagarCliente * 100, 2) if valorTotalPagarCliente != 0 else 0
 
-    # 5. Calculamos el Status de Mora del Cliente como el Último registro de Status_Mora en el DF de moras filtrado a hoy
-    statusMora = morasToday.sort_values(by='Fecha_Mora')['Status_Mora'].iloc[-1] if not morasToday.empty else 'Al día'
+    # 5. Calculamos el Status de Mora del Cliente como el último registro por Fecha
+    statusMora = morasToday.sort_values(by='Fecha')['Status_Mora'].iloc[-1] if not morasToday.empty else 'Al día'
 
     return pagoActualCliente, valorTotalPagarCliente, numCuotasPendientes, porcentajePago, statusMora
 

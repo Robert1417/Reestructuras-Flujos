@@ -42,13 +42,18 @@ def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensual
     pagoActualCliente, valorTotalPagar, cuotasPendientes, porcentajePago, statusMora = calcularMetricasFlujos(moras, berex, mensualidades)
 
     # Creamos 2 Columnas: 1 para mostrar el Flujo de Berex y otra para mostrar las Métricas
-    col1, col2 = st.columns([3, 1])
+    col1, col2 = st.columns([3, 2], vertical_alignment="center")
 
     # En la Columna 1, Mostramos el Flujo de Berex
     with col1:
-        st.subheader("Flujo de Berex")
+        st.header("Flujo de Berex")
         # Mostramos los Datos de Berex
-        st.dataframe(estilizarBerex(berex), width='stretch')
+        st.dataframe(estilizarBerex(berex), width='stretch',
+                    column_config={
+                        'Fecha_Pago_Berex': st.column_config.DateColumn(format="YYYY-MM-DD"),
+                        'Monto_Berex': st.column_config.NumberColumn(format="$%,.0f"),
+                        'Saldo_Pendiente': st.column_config.NumberColumn(format="$%,.0f")
+                    })
 
     # En la Columna 2, Mostramos las Métricas Calculadas
     with col2:
@@ -57,13 +62,15 @@ def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensual
         st.metric(label="Valor Total a Pagar por el Cliente",
                 value=f"${valorTotalPagar:,.2f}",
                 delta=f"${valorTotalPagar - pagoActualCliente:,.2f}", delta_color="inverse")
-        st.metric(label="Número de Cuotas Pendientes por Pagar del Cliente",
+        st.metric(label="Cuotas Pendientes por Pagar",
                 value=cuotasPendientes,
-                delta_color="green" if cuotasPendientes > 0 else "red")
-        st.metric(label="Porcentaje de Pago del Cliente", value=f"{porcentajePago:.2f}%", delta="100.00%")
+                delta_color="red" if cuotasPendientes > 0 else "green",
+                delta=f"{cuotasPendientes} Cuotas Pendientes" if cuotasPendientes > 0 else "No hay Cuotas Pendientes")
+        st.metric(label="Porcentaje de Pago del Cliente", value=f"{porcentajePago:.2f}%", delta="100.00%", delta_color="inverse")
         st.metric(label="Status de Mora del Cliente",
                 value=statusMora,
-                delta_color="green" if statusMora.lower() == "al día" else "red")
+                delta_color="green" if statusMora.lower() == "al día" else "red",
+                delta="Al día" if statusMora.lower() == "al día" else "En Mora")
 
 # Función Auxiliar para Mostrar el Pagaré en la Aplicación
 @stWarningLogWrapper(message="Error al mostrar el Pagaré en la Aplicación")
@@ -92,7 +99,12 @@ def mostrarParametrosReestructura(params: dict) -> None:
     cols = st.columns(len(params), vertical_alignment="center")
     for i, (parametro, valor) in enumerate(params.items()):
         with cols[i]:
-            st.metric(label=parametro, value=valor)
+            if isinstance(valor, (int, float)):
+                st.metric(label=parametro, value=f"${valor:,.2f}")
+            elif isinstance(valor, pd.Timestamp):
+                st.metric(label=parametro, value=valor.strftime("%Y-%m-%d"))
+            else:
+                st.metric(label=parametro, value=valor)
 
 # Función Auxiliar para Mostrar el Nuevo Flujo después de la Reestructura
 @stWarningLogWrapper(message="Error al mostrar el Nuevo Flujo después de la Reestructura")

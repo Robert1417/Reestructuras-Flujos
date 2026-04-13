@@ -19,7 +19,7 @@ columnasPagare = ['Referencia','Fecha PaB','Monto PaB','Fecha Comision','Monto C
 
 # Definimos Dfs vacios ante algún error
 emptyMoras = pd.DataFrame(columns=columnasMoras)
-emptyBerex = pd.DataFrame(columns=columnasBerex)
+emptyBerex = pd.DataFrame(columns=columnasBerex + ['Saldo_Pendiente'])
 emptyMensualidades = pd.DataFrame(columns=columnasMensualidades)
 emptyPagare = pd.DataFrame(columns=columnasPagare)
 
@@ -43,7 +43,7 @@ def imputeNans(df: pd.DataFrame, col: str, value) -> None:
 def addSaldoPendienteToBerex(berex: pd.DataFrame, moras: pd.DataFrame) -> pd.DataFrame:
     # Primero Verificamos que solo exista una Referencia en cada DF
     if berex['Referencia'].nunique() != 1 or moras['Referencia'].nunique() != 1:
-        raise ValueError(f'Los DFs de Berex y Moras deben contener solo una Referencia para poder calcular el Saldo Pendiente, \
+        raise ValueError(f'Los DFs de Berex y Moras deben contener solo una Referencia para poder calcular el Saldo_Pendiente, \
                         pero el DF de Berex tiene {berex["Referencia"].nunique()} referencias y el DF de Moras tiene {moras["Referencia"].nunique()} referencias')
     # Obtenemos el Pago Total de Moras
     pago_total_moras = moras['Pago'].sum()
@@ -52,10 +52,10 @@ def addSaldoPendienteToBerex(berex: pd.DataFrame, moras: pd.DataFrame) -> pd.Dat
     # Ordenamos el DF de Berex por Meses_Totales y Destino de Menor a Mayor
     berex = berex.sort_values(by=['Meses_Totales', 'Destino']).reset_index(drop=True)
 
-    # Creamos Lista para Guardar el Saldo Pendiente Calculado para cada Fila
+    # Creamos Lista para Guardar el Saldo_Pendiente Calculado para cada Fila
     saldo_pendiente = []
 
-    # Iteramos sobre las Filas del DF de Berex para Calcular el Saldo Pendiente
+    # Iteramos sobre las Filas del DF de Berex para Calcular el Saldo_Pendiente
     for index, row in berex.iterrows():
         # Obtenemos el Monto a Pagar
         monto_a_pagar = row['Monto_Berex']
@@ -63,7 +63,7 @@ def addSaldoPendienteToBerex(berex: pd.DataFrame, moras: pd.DataFrame) -> pd.Dat
         max_pago = min(monto_a_pagar, pago_total_moras)
         # Actualizamos el Pago Total de Moras Restando el Maximo Pago
         pago_total_moras -= max_pago
-        # Calculamos el Saldo Pendiente Restando el Maximo Pago al Monto a Pagar
+        # Calculamos el Saldo_Pendiente Restando el Maximo Pago al Monto a Pagar
         saldo_pendiente.append(monto_a_pagar - max_pago)
     
     # Añadimos la Columna de Saldo_Pendiente al DF de Berex
@@ -79,11 +79,11 @@ def addSaldoPendienteToBerex(berex: pd.DataFrame, moras: pd.DataFrame) -> pd.Dat
 def addSaldoPendienteToBerexMassive(berex: pd.DataFrame, moras: pd.DataFrame) -> pd.DataFrame:
     # Verificamos que ambos DFs no esten Vacios
     if berex.empty or moras.empty:
-        raise ValueError('Los DFs de Berex y Moras no pueden estar vacíos para calcular el Saldo Pendiente')
+        raise ValueError('Los DFs de Berex y Moras no pueden estar vacíos para calcular el Saldo_Pendiente')
     
-    # Vamos a Agregar el Saldo Pendiente Agrupando por Referencia
+    # Vamos a Agregar el Saldo_Pendiente Agrupando por Referencia
     berexPendientes = [addSaldoPendienteToBerex(berex[berex['Referencia'] == ref], moras[moras['Referencia'] == ref]) for ref in berex['Referencia'].unique()]
-    # Concatenamos los DFs de Berex con el Saldo Pendiente
+    # Concatenamos los DFs de Berex con el Saldo_Pendiente
     berex = pd.concat(berexPendientes, ignore_index=True)
 
     return berex
@@ -221,6 +221,10 @@ def filterDataToToday(moras: pd.DataFrame, berex: pd.DataFrame, mensualidades: p
 # Función Auxiliar para filtrar las Mensualidades presentes en el flujo Original de Berex, es decir, solo las mensualidades que no sobrepasenFecha_Pago_Berex.max()
 @logWrapper(message='Error al filtrar las mensualidades presentes en el flujo original de Berex', onErrorValue=emptyMensualidades)
 def filterMensualidadesToOriginalBerex(mensualidades: pd.DataFrame, berex: pd.DataFrame) -> pd.DataFrame:
+    # Si no hay fechas válidas en Berex, no hay mensualidades asociadas al flujo original
+    if berex.empty or berex['Fecha_Pago_Berex'].dropna().empty:
+        return mensualidades.iloc[0:0].copy()
+
     # Obtenemos la Fecha_Pago_Berex máxima del flujo de Berex
     max_fecha_pago_berex = berex['Fecha_Pago_Berex'].max()
     # Ahora Dejamos max_fecha_pago como el dia del siguiente mes
@@ -247,19 +251,22 @@ def reorganizeDataAsInPagareForMonth(moras: pd.DataFrame, berex: pd.DataFrame, m
     pagareDict = {}
     # Añadimos la Referencia
     pagareDict['Referencia'] = berex['Referencia'].iloc[0] if not berex.empty else (moras['Referencia'].iloc[0] if not moras.empty else (mensualidades['Referencia'].iloc[0] if not mensualidades.empty else ''))
+    # Normalizamos el destino para soportar variantes con/sin tilde
+    destino_normalizado = berex['Destino'].astype(str).str.strip().str.normalize('NFKD').str.encode('ascii', 'ignore').str.decode('ascii') if not berex.empty else pd.Series(dtype=str)
+
     # Añadimos los Datos de PaB
-    berexPaB = berex[berex['Destino'] == 'Banco'].copy()
+    berexPaB = berex[destino_normalizado == 'Banco'].copy()
     pagareDict['Fecha PaB'] = berexPaB['Fecha_Pago_Berex'].min() if not berexPaB.empty else pd.NaT
     pagareDict['Monto PaB'] = berexPaB['Monto_Berex'].sum() if not berexPaB.empty else 0
     # Añadimos los Datos de Comisión
-    berexComision = berex[berex['Destino'] == 'Comisión'].copy()
+    berexComision = berex[destino_normalizado == 'Comision'].copy()
     pagareDict['Fecha Comision'] = berexComision['Fecha_Pago_Berex'].min() if not berexComision.empty else pd.NaT
     pagareDict['Monto Comision'] = berexComision['Monto_Berex'].sum() if not berexComision.empty else 0
     # Añadimos los Datos de Mensualidades
     pagareDict['Fecha Mensualidad'] = mensualidades['Fecha_Cobro'].min() if not mensualidades.empty else pd.NaT
     pagareDict['Monto Mensualidad'] = mensualidades['Monto_Mensualidad'].sum() if not mensualidades.empty else 0
 
-    # El Saldo Pendiente se Inicializa como 0
+    # El Saldo_Pendiente se Inicializa como 0
     pagareDict['Saldo_Pendiente'] = 0
     # Se le Añade el Saldo pendiente de Berex
     pagareDict['Saldo_Pendiente'] += berex['Saldo_Pendiente'].sum() if not berex.empty else 0
@@ -290,6 +297,10 @@ def reorganizeDataAsInPagare(moras: pd.DataFrame, berex: pd.DataFrame, mensualid
     # Primero Creamos el Diccionario donde se va a guardar la Información Reorganizada
     pagareDict = {col: [] for col in columnasPagare}
 
+    # Si no hay fechas válidas en Berex, no hay ventanas mensuales para reorganizar
+    if berex.empty or berex['Fecha_Pago_Berex'].dropna().empty:
+        return emptyPagare.copy()
+
     # Ahora Obtenemos la Fecha Minima y Maxima de Pago del Flujo de Berex para Filtrar las Moras y Mensualidades a esa Fecha
     min_fecha_pago_berex = berex['Fecha_Pago_Berex'].min()
     max_fecha_pago_berex = berex['Fecha_Pago_Berex'].max()
@@ -308,7 +319,7 @@ def reorganizeDataAsInPagare(moras: pd.DataFrame, berex: pd.DataFrame, mensualid
 
         # Añadimos los Datos Reorganizados del Mes Actual al Diccionario del Pagaré
         for col in columnasPagare:
-            pagareDict[col].extend(pagare_mes[col].tolist())
+            pagareDict[col].append(pagare_mes[col])
         
         # Avanzamos al Siguiente Mes
         current_month += pd.offsets.MonthBegin(1)
