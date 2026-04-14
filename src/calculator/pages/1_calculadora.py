@@ -96,7 +96,7 @@ def main():
     # Verificamos que dfMoras y dfFlujoBerex no estén vacíos antes de Mostrar el Flujo de Berex y las Métricas
     if not dfMoras.empty and not dfFlujoBerex.empty:
         # Mostramos el Flujo de Berex y las Métricas Calculadas en la Aplicación
-        mostrarFlujoBerexYMetricas(dfMoras, dfFlujoBerex, dfMensualidades)
+        mostrarFlujoBerexYMetricas(dfMoras, dfFlujoBerex, dfMensualidades, filterToToday=False)
 
         # Añadimos un Divisor
         st.divider()

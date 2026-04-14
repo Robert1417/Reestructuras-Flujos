@@ -142,6 +142,15 @@ class FlujoTotal:
         maskPagoIncompleto = facturasPagadas['Saldo_Pendiente'] > 0
         facturasPagadas.loc[maskPagoIncompleto, 'Monto_Berex'] = facturasPagadas.loc[maskPagoIncompleto, 'Monto_Berex'] - facturasPagadas.loc[maskPagoIncompleto, 'Saldo_Pendiente']
         facturasPagadas.loc[maskPagoIncompleto, 'Saldo_Pendiente'] = 0
+
+        # Ahora Vamos a Agrupar las Facturas Pagadas por Destino, dejando la Última Fecha_Pago_Berex, y la suma del resto
+        facturasPagadas = facturasPagadas.groupby('Destino').agg({
+            'Referencia': 'first',
+            'Fecha_Pago_Berex': 'max',
+            'Monto_Berex': 'sum',
+            'Saldo_Pendiente': 'sum'
+        }).reset_index()
+
         return facturasPagadas
 
     # Método para Obtener el Monto de Berex de las Facturas No Pagadas con Destino Banco

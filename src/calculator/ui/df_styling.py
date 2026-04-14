@@ -8,6 +8,51 @@ import pandas as pd
 from src.calculator.utils.logger_setup import stWarningLogWrapper
 from src.calculator.utils.data_load import emptyBerex, emptyPagare
 
+# Función Auxiliar para Mostrar una leyenda de los Colores
+def mostrarLeyendaColores(legend_dict: dict[str,str]):
+    """
+    Displays a centered legend for a DataFrame.
+    legend_dict: {'Description': '#HEXCODE'}
+    """
+    # Create columns based on the number of items in the dictionary
+    cols = st.columns(len(legend_dict))
+    for col, (label, color) in zip(cols, legend_dict.items()):
+        with col:
+            with st.container(border=True, width='stretch'):
+                # Using Markdown + HTML for the color box and centered text
+                st.markdown(
+                    f"""
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="
+                            width: 20px; 
+                            height: 20px; 
+                            background-color: {color};
+                            opacity: 0.85; 
+                            border: 1.5px solid #AAAAAA;
+                            border-radius: 5px; 
+                            margin-bottom: 5px;">
+                        </div>
+                        <span style="font-size: 14px; text-align: center;">{label}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+# Definimos los Colores y la Leyenda para el DataFrame de Berex
+berex_legend = {
+    'Pendiente': '#c7c8ca', # Gris
+    'Pagada': '#ccffcc', # Verde Claro
+    'Pago Parcial': '#fff2cc', # Amarillo Claro
+    'Sin Pagar': '#ffcccc' # Rojo Claro
+}
+
+pagare_legend = {
+    'Pago al Banco': '#ccffcc', # Verde Claro
+    'Pago de Comisión': '#ccffcc', # Verde Claro
+    'Pago de Mensualidad': '#ccffcc', # Verde Claro
+    'Incumplimiento': '#ffcccc' # Rojo Claro
+}
+
 # Función Auxiliar para Estilizar el DataFrame de Berex
 @stWarningLogWrapper(message="Error al estilizar el DataFrame de Berex")
 def estilizarBerex(berex: pd.DataFrame):
@@ -29,8 +74,14 @@ def estilizarBerex(berex: pd.DataFrame):
     berex['Saldo_Pendiente'] = berex['Saldo_Pendiente'].round(2)
     berex['Monto_Berex'] = berex['Monto_Berex'].round(2)
 
+    # Creamos Columna de Meses_Totales como Fecha_Pago_Berex.dt.year * 12 + Fecha_Pago_Berex.dt.month para el Ordenamiento, y luego la Eliminamos del DataFrame
+    berex = berex.assign(Meses_Totales=berex['Fecha_Pago_Berex'].dt.year * 12 + berex['Fecha_Pago_Berex'].dt.month)
+
     # Ordenamos el DF por Fecha_Pago_Berex y Destino de menor a mayor
-    berex = berex.sort_values(by=['Fecha_Pago_Berex', 'Destino'], ascending=[True, True])
+    berex = berex.sort_values(by=['Meses_Totales', 'Destino'], ascending=[True, True])
+
+    # Quitamos la Columna Creada
+    berex = berex.drop(columns=['Meses_Totales'])
     
     # Definimos la Función de Estilo para el DataFrame de Berex
     def styleBerex(row):

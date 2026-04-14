@@ -5,7 +5,7 @@ import pandas as pd
 # Librerías de Ayuda
 from src.calculator.utils.calculos_flujos import calcularMetricasFlujos, calcularPagoMinimoInicial
 from src.calculator.utils.logger_setup import stWarningLogWrapper
-from src.calculator.ui.df_styling import estilizarBerex, estilizarPagare
+from src.calculator.ui.df_styling import estilizarBerex, estilizarPagare, mostrarLeyendaColores, berex_legend, pagare_legend
 from src.calculator.core.flujos import FlujoTotal
 from src.calculator.utils.data_load import reorganizeDataAsInPagare
 
@@ -19,7 +19,7 @@ def mostrarPagoMinimo(mensualidades: pd.DataFrame) -> None:
         mensualidades (pd.DataFrame): DataFrame que contiene las mensualidades.
     """
     mensualidadesFaltantes, pagoMinimo = calcularPagoMinimoInicial(mensualidades)
-    st.subheader("Pago Mínimo Requerido por Mensualidades Pendientes")
+    st.subheader("Pago Mínimo Requero por Mensualidades Pendientes")
 
     if mensualidadesFaltantes == 0:
         st.success("No hay Mensualidades Pendientes, el Cliente está al Día con sus Pagos de Mensualidades")
@@ -50,6 +50,7 @@ def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensual
 
     st.header(berexHeader)
     # Mostramos los Datos de Berex
+    mostrarLeyendaColores(berex_legend)
     st.dataframe(estilizarBerex(berex), width='stretch',
                 column_config={
                     'Fecha_Pago_Berex': st.column_config.DateColumn(format="YYYY-MM-DD"),
@@ -83,6 +84,7 @@ def mostrarPagare(pagare: pd.DataFrame, subheader: str = "Pagaré") -> None:
         pagare (pd.DataFrame): DataFrame que contiene los datos del pagaré.
     """
     st.subheader(subheader)
+    mostrarLeyendaColores(pagare_legend)
     st.dataframe(estilizarPagare(pagare), width='stretch')
 
 # Función Auxiliar para Mostrar los Párametros de la Reestructura
