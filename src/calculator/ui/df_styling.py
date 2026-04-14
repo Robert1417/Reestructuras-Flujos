@@ -31,6 +31,9 @@ def estilizarBerex(berex: pd.DataFrame):
     
     # Definimos la Función de Estilo para el DataFrame de Berex
     def styleBerex(row):
+        if row['Fecha_Pago_Berex'] > pd.Timestamp.now():
+            # Agregamos Color Amarillo para las Filas con Fecha_Pago_Berex Mayor a la Fecha Actual
+            return ['background-color: #ffffcc; color: #000000'] * len(row)
         if row['Saldo_Pendiente'] > 0:
             # Agregamos Color Rojo para las Filas con Saldo_Pendiente Mayor a 0
             return ['background-color: #ffcccc; color: #000000'] * len(row)

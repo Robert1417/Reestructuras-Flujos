@@ -41,36 +41,32 @@ def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensual
     # Calculamos las Métricas de los Flujos
     pagoActualCliente, valorTotalPagar, cuotasPendientes, porcentajePago, statusMora = calcularMetricasFlujos(moras, berex, mensualidades)
 
-    # Creamos 2 Columnas: 1 para mostrar el Flujo de Berex y otra para mostrar las Métricas
-    col1, col2 = st.columns([3, 2], vertical_alignment="center")
 
-    # En la Columna 1, Mostramos el Flujo de Berex
-    with col1:
-        st.header("Flujo de Berex")
-        # Mostramos los Datos de Berex
-        st.dataframe(estilizarBerex(berex), width='stretch',
-                    column_config={
-                        'Fecha_Pago_Berex': st.column_config.DateColumn(format="YYYY-MM-DD"),
-                        'Monto_Berex': st.column_config.NumberColumn(format="$%,.0f"),
-                        'Saldo_Pendiente': st.column_config.NumberColumn(format="$%,.0f")
-                    })
+    st.header("Flujo de Berex")
+    # Mostramos los Datos de Berex
+    st.dataframe(estilizarBerex(berex), width='stretch',
+                column_config={
+                    'Fecha_Pago_Berex': st.column_config.DateColumn(format="YYYY-MM-DD"),
+                    'Monto_Berex': st.column_config.NumberColumn(format="$%,.0f"),
+                    'Saldo_Pendiente': st.column_config.NumberColumn(format="$%,.0f")
+                })
 
-    # En la Columna 2, Mostramos las Métricas Calculadas
-    with col2:
-        st.subheader("Métricas del Cliente")
-        st.metric(label="Pago Actual del Cliente", value=f"${pagoActualCliente:,.2f}")
-        st.metric(label="Valor Total a Pagar por el Cliente",
-                value=f"${valorTotalPagar:,.2f}",
-                delta=f"${valorTotalPagar - pagoActualCliente:,.2f}", delta_color="inverse")
-        st.metric(label="Cuotas Pendientes por Pagar",
-                value=cuotasPendientes,
-                delta_color="red" if cuotasPendientes > 0 else "green",
-                delta=f"{cuotasPendientes} Cuotas Pendientes" if cuotasPendientes > 0 else "No hay Cuotas Pendientes")
-        st.metric(label="Porcentaje de Pago del Cliente", value=f"{porcentajePago:.2f}%", delta="100.00%", delta_color="inverse")
-        st.metric(label="Status de Mora del Cliente",
-                value=statusMora,
-                delta_color="green" if statusMora.lower() == "al día" else "red",
-                delta="Al día" if statusMora.lower() == "al día" else "En Mora")
+    # Creamos 5 Columnas
+    cols = st.columns(5, vertical_alignment="center", gap="medium")
+    st.subheader("Métricas del Cliente")
+    cols[0].metric(label="Pago Actual del Cliente", value=f"${pagoActualCliente:,.2f}")
+    cols[1].metric(label="Valor Total a Pagar por el Cliente",
+            value=f"${valorTotalPagar:,.2f}",
+            delta=f"${valorTotalPagar - pagoActualCliente:,.2f}", delta_color="inverse")
+    cols[2].metric(label="Cuotas Pendientes por Pagar",
+            value=cuotasPendientes,
+            delta_color="red" if cuotasPendientes > 0 else "green",
+            delta=f"{cuotasPendientes} Cuotas Pendientes" if cuotasPendientes > 0 else "No hay Cuotas Pendientes")
+    cols[3].metric(label="Porcentaje de Pago del Cliente", value=f"{porcentajePago:.2f}%", delta="100.00%", delta_color="inverse")
+    cols[4].metric(label="Status de Mora del Cliente",
+            value=statusMora,
+            delta_color="green" if statusMora.lower() == "al día" else "red",
+            delta="Al día" if statusMora.lower() == "al día" else "En Mora")
 
 # Función Auxiliar para Mostrar el Pagaré en la Aplicación
 @stWarningLogWrapper(message="Error al mostrar el Pagaré en la Aplicación")
@@ -126,9 +122,7 @@ def mostrarNuevoFlujo(moras, berex, mensualidades, params):
         st.markdown(f"<span style='color:red;font-weight:bold;'>{errorMessage}</span>", unsafe_allow_html=True)
         return # Para Evitar que se Intente Mostrar un Flujo de Berex que no se ha Calculado Correctamente
     
-    # Mostramos Parámetros de la Reestructura
-    st.subheader("Parámetros de la Reestructura")
-    mostrarParametrosReestructura(params)
+    mostrarParametrosReestructura(params) # Ya incluye el Subheader
 
     # Creamos 2 Tabs para realizar Comparación entre el Flujo de Berex Actual y el Nuevo Flujo de Berex después de la Reestructura
     tab1, tab2 = st.tabs(["Flujo de Berex Actual", "Nuevo Flujo de Berex Después de la Reestructura"])
@@ -142,14 +136,8 @@ def mostrarNuevoFlujo(moras, berex, mensualidades, params):
 
     # Añadimos Subheader para Comparación de Pagarés
     st.subheader("Comparación de Pagarés")
-
-    # Obtenemos 2 Columnas para Mostrar el Pagaré Actual vs el Nuevo Pagaré después de la Reestructura
-    col1, col2 = st.columns(2)
-
-    with col1:
-        mostrarPagare(reorganizeDataAsInPagare(moras, berex, mensualidades), subheader="Pagaré Actual")
-    with col2:
-        mostrarPagare(reorganizeDataAsInPagare(moras, nuevoBerex, mensualidades), subheader="Nuevo Pagaré Después de la Reestructura")
+    mostrarPagare(reorganizeDataAsInPagare(moras, berex, mensualidades), subheader="Pagaré Actual")
+    mostrarPagare(reorganizeDataAsInPagare(moras, nuevoBerex, mensualidades), subheader="Nuevo Pagaré Después de la Reestructura")
 
     # Agregamos un Divisor
     st.divider()
