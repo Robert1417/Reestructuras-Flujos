@@ -28,18 +28,25 @@ def estilizarBerex(berex: pd.DataFrame):
     # Dejamos Saldo_Pendiente y Monto_Berex redondeados a 2 decimales para una mejor visualización
     berex['Saldo_Pendiente'] = berex['Saldo_Pendiente'].round(2)
     berex['Monto_Berex'] = berex['Monto_Berex'].round(2)
+
+    # Ordenamos el DF por Fecha_Pago_Berex y Destino de menor a mayor
+    berex = berex.sort_values(by=['Fecha_Pago_Berex', 'Destino'], ascending=[True, True])
     
     # Definimos la Función de Estilo para el DataFrame de Berex
     def styleBerex(row):
-        if row['Fecha_Pago_Berex'] > pd.Timestamp.now():
-            # Agregamos Color Amarillo para las Filas con Fecha_Pago_Berex Mayor a la Fecha Actual
-            return ['background-color: #ffffcc; color: #000000'] * len(row)
+        if row['Fecha_Pago_Berex'].date() >= pd.Timestamp.now().date():
+            # Agregamos Color Gris para las Filas con Fecha_Pago_Berex Mayor a la Fecha Actual
+            return ['background-color: #c7c8ca; color: #000000'] * len(row)
+        if row['Saldo_Pendiente'] == 0:
+            # Agregamos Color Verde para las Filas con Saldo_Pendiente Igual a 0
+            return ['background-color: #ccffcc; color: #000000'] * len(row)
+        if row['Saldo_Pendiente'] < row['Monto_Berex']:
+            # Agregamos Color Amarillo para las Filas con Saldo_Pendiente Menor al Monto_Berex
+            return ['background-color: #fff2cc; color: #000000'] * len(row)
         if row['Saldo_Pendiente'] > 0:
             # Agregamos Color Rojo para las Filas con Saldo_Pendiente Mayor a 0
             return ['background-color: #ffcccc; color: #000000'] * len(row)
-        else:
-            # Agregamos Color Verde para las Filas con Saldo_Pendiente Igual a 0
-            return ['background-color: #ccffcc; color: #000000'] * len(row)
+
 
     berexStyled =  berex.style.apply(styleBerex, axis=1)
     return berexStyled

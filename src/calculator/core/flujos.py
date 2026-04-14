@@ -107,7 +107,7 @@ class FlujoTotal:
         # Primero Dejamos fechaCorte como el Último Día del Mes para Evitar Problemas con las Mensualidades que Tienen Fecha de Cobro a Final de Mes
         fechaCorte = fechaCorte.replace(day=1) + pd.offsets.MonthEnd(0)
         # Filtramos las Mensualidades que Tienen Fecha de Cobro Menor o Igual a la Fecha de Corte, lo que Indica que el Cliente No las ha Pagado, y Sumamos el Monto_Mensualidad de esas Mensualidades No Pagadas para Obtener el Monto Total No Pagado por el Cliente
-        mensualidadesNoPagadas = self.mensualidades[self.mensualidades['Fecha_Cobro'].date() <= fechaCorte.date()]
+        mensualidadesNoPagadas = self.mensualidades[self.mensualidades['Fecha_Cobro'].dt.date() <= fechaCorte.date()]
         # Ahora Filtramos las Mensualidades que Status_Facturacion == "POR_COBRAR"
         mensualidadesNoPagadas = mensualidadesNoPagadas[mensualidadesNoPagadas['Status_Facturacion'] == "POR_COBRAR"]
         montoNoPagado = mensualidadesNoPagadas['Monto_Mensualidad'].sum()

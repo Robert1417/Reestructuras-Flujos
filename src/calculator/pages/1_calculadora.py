@@ -8,7 +8,7 @@ import pandas as pd
 from src.calculator.utils.session_state_managers import updateSessionState, initializeSessionState, areSessionStatesValid, initializeRequiredSessionStates
 from src.calculator.utils.data_load import loadData
 from src.calculator.utils.logger_setup import notInfiniteLog
-from src.calculator.ui.components import mostrarFlujoBerexYMetricas, mostrarParametrosReestructura, mostrarNuevoFlujo
+from src.calculator.ui.components import mostrarFlujoBerexYMetricas, mostrarParametrosReestructura, mostrarNuevoFlujo, mostrarPagoMinimo
 
 # Definimos la Ejecución Inicial de la Aplicación
 def main():
@@ -52,9 +52,10 @@ def main():
     # Creamos el Input de Nuevo Apartado Mensual para Obtener el Nuevo Monto Mensual
     nuevo_apartado_mensual = st.sidebar.number_input(
         "Ingrese el Nuevo Apartado Mensual",
-        min_value=0,
-        step=100,
-        value=1000,
+        min_value=0.0,
+        step=100.0,
+        value=1000.0,
+        format="%.0f",
         )
 
     # Actualizamos el Session State con el Nuevo Apartado Mensual
@@ -63,9 +64,10 @@ def main():
     # Creamos un Input de Nuevo Pago Inicial para Obtener el Nuevo Monto de Pago Inicial
     nuevo_pago_inicial = st.sidebar.number_input(
         "Ingrese el Nuevo Pago Inicial",
-        min_value=0,
-        step=100,
-        value=1000,
+        min_value=0.0,
+        step=100.0,
+        value=1000.0,
+        format="%.0f",
         )
 
     # Actualizamos el Session State con el Nuevo Pago Inicial
@@ -97,6 +99,12 @@ def main():
         mostrarFlujoBerexYMetricas(dfMoras, dfFlujoBerex, dfMensualidades)
 
         # Añadimos un Divisor
+        st.divider()
+
+        # Mostramos el Pago Mínimo
+
+        mostrarPagoMinimo(dfMensualidades)
+
         st.divider()
 
         # Mostramos los Parámetros de la Reestructura en la Aplicación

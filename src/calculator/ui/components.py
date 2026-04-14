@@ -19,7 +19,12 @@ def mostrarPagoMinimo(mensualidades: pd.DataFrame) -> None:
         mensualidades (pd.DataFrame): DataFrame que contiene las mensualidades.
     """
     mensualidadesFaltantes, pagoMinimo = calcularPagoMinimoInicial(mensualidades)
-    st.subheader("Pago Mínimo Requerido")
+    st.subheader("Pago Mínimo Requerido por Mensualidades Pendientes")
+
+    if mensualidadesFaltantes == 0:
+        st.success("No hay Mensualidades Pendientes, el Cliente está al Día con sus Pagos de Mensualidades")
+        return
+
     # Vamos a Dejar la Métrica a la Izquierda y el Valor a la Derecha
     col1, col2 = st.columns([1, 2], vertical_alignment="center", gap="large")
     with col1:
@@ -29,7 +34,7 @@ def mostrarPagoMinimo(mensualidades: pd.DataFrame) -> None:
 
 # Función para Mostrar el Flujo de Berex y Métricas en la Aplicación
 @stWarningLogWrapper(message="Error al mostrar el Flujo de Berex y Métricas en la Aplicación")
-def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensualidades: pd.DataFrame) -> None:
+def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensualidades: pd.DataFrame, filterToToday: bool = True, berexHeader: str = 'Flujo de Berex') -> None:
     """
     Muestra el flujo de berex y las métricas calculadas en la aplicación.
 
@@ -37,12 +42,13 @@ def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensual
         moras (pd.DataFrame): DataFrame que contiene las moras.
         berex (pd.DataFrame): DataFrame que contiene los datos de berex.
         mensualidades (pd.DataFrame): DataFrame que contiene las mensualidades.
+        filterToToday (bool): Indica si se deben filtrar los datos hasta hoy.
+        berexHeader (str): Encabezado para el flujo de berex.
     """
     # Calculamos las Métricas de los Flujos
-    pagoActualCliente, valorTotalPagar, cuotasPendientes, porcentajePago, statusMora = calcularMetricasFlujos(moras, berex, mensualidades)
+    pagoActualCliente, valorTotalPagar, cuotasPendientes, porcentajePago, statusMora = calcularMetricasFlujos(moras, berex, mensualidades, filterToToday)
 
-
-    st.header("Flujo de Berex")
+    st.header(berexHeader)
     # Mostramos los Datos de Berex
     st.dataframe(estilizarBerex(berex), width='stretch',
                 column_config={
@@ -51,19 +57,18 @@ def mostrarFlujoBerexYMetricas(moras: pd.DataFrame, berex: pd.DataFrame, mensual
                     'Saldo_Pendiente': st.column_config.NumberColumn(format="$%,.0f")
                 })
 
+
+    st.header("Métricas del Cliente", text_alignment="center")
     # Creamos 5 Columnas
-    cols = st.columns(5, vertical_alignment="center", gap="medium")
-    st.subheader("Métricas del Cliente")
-    cols[0].metric(label="Pago Actual del Cliente", value=f"${pagoActualCliente:,.2f}")
-    cols[1].metric(label="Valor Total a Pagar por el Cliente",
-            value=f"${valorTotalPagar:,.2f}",
-            delta=f"${valorTotalPagar - pagoActualCliente:,.2f}", delta_color="inverse")
-    cols[2].metric(label="Cuotas Pendientes por Pagar",
+    cols = st.columns(2, vertical_alignment="center", gap="medium")
+    cols[0].metric(label="Pago Actual del Cliente", value=f"${pagoActualCliente:,.2f}",delta=f"${valorTotalPagar - pagoActualCliente:,.2f}", delta_color="red" if valorTotalPagar - pagoActualCliente > 0 else "green")
+    cols[0].metric(label="Valor Total a Pagar por el Cliente",value=f"${valorTotalPagar:,.2f}")
+    cols[0].metric(label="Cuotas Pendientes por Pagar",
             value=cuotasPendientes,
             delta_color="red" if cuotasPendientes > 0 else "green",
             delta=f"{cuotasPendientes} Cuotas Pendientes" if cuotasPendientes > 0 else "No hay Cuotas Pendientes")
-    cols[3].metric(label="Porcentaje de Pago del Cliente", value=f"{porcentajePago:.2f}%", delta="100.00%", delta_color="inverse")
-    cols[4].metric(label="Status de Mora del Cliente",
+    cols[1].metric(label="Porcentaje de Pago del Cliente", value=f"{porcentajePago:.2f}%", delta=f"{porcentajePago:.2f}%", delta_color="green" if porcentajePago >= 100 else "red")
+    cols[1].metric(label="Status de Mora del Cliente",
             value=statusMora,
             delta_color="green" if statusMora.lower() == "al día" else "red",
             delta="Al día" if statusMora.lower() == "al día" else "En Mora")
@@ -122,14 +127,14 @@ def mostrarNuevoFlujo(moras, berex, mensualidades, params):
         st.markdown(f"<span style='color:red;font-weight:bold;'>{errorMessage}</span>", unsafe_allow_html=True)
         return # Para Evitar que se Intente Mostrar un Flujo de Berex que no se ha Calculado Correctamente
     
-    mostrarParametrosReestructura(params) # Ya incluye el Subheader
+    # mostrarParametrosReestructura(params) # Ya incluye el Subheader
 
     # Creamos 2 Tabs para realizar Comparación entre el Flujo de Berex Actual y el Nuevo Flujo de Berex después de la Reestructura
     tab1, tab2 = st.tabs(["Flujo de Berex Actual", "Nuevo Flujo de Berex Después de la Reestructura"])
     with tab1:
-        mostrarFlujoBerexYMetricas(moras, berex, mensualidades)
+        mostrarFlujoBerexYMetricas(moras, berex, mensualidades, filterToToday=False, berexHeader='Flujo Antiguo del Cliente')
     with tab2:
-        mostrarFlujoBerexYMetricas(moras, nuevoBerex, mensualidades)
+        mostrarFlujoBerexYMetricas(moras, nuevoBerex, mensualidades, filterToToday=False, berexHeader='Nuevo Flujo Después de la Reestructura') # No Filtramos a Hoy para Mostrar el Flujo Completo después de la Reestructura
 
     # Agregamos un Divisor
     st.divider()

@@ -25,7 +25,7 @@ def calcularFacturasPendientes(moras: pd.DataFrame, berex: pd.DataFrame) -> pd.D
     # Primero Obtenemos el Pago Total del Cliente
     pagoTotalCliente = moras['Pago'].sum()
     # Ahora Ordenamos el DF de berex por Fecha_Pago_Berex
-    berexOrdenado = berex.sort_values(by='Fecha_Pago_Berex')
+    berexOrdenado = berex.sort_values(by=['Fecha_Pago_Berex','Destino'], ascending=[True, True])
     # Ahora Creamos una Columna Acumulada de Monto_Berex en el DF de berex
     berexOrdenado['Monto_Berex_Acumulado'] = berexOrdenado['Monto_Berex'].cumsum()
     # Ahora Filtramos el DF de berex para Obtener Solo las Filas donde el Monto_Berex_Acumulado sea Mayor que el Pago Total del Cliente
@@ -35,7 +35,7 @@ def calcularFacturasPendientes(moras: pd.DataFrame, berex: pd.DataFrame) -> pd.D
 
 # Función para Calcular Métricas de los Flujos
 @logWrapper(message="Calculando Métricas de Flujos", onErrorValue=(0,0,0,0,''))
-def calcularMetricasFlujos(moras: pd.DataFrame, berex: pd.DataFrame, mensualidades: pd.DataFrame) -> Tuple[float, float, float, float, str]:
+def calcularMetricasFlujos(moras: pd.DataFrame, berex: pd.DataFrame, mensualidades: pd.DataFrame, filterToToday: bool) -> Tuple[float, float, float, float, str]:
     """
     Calcula las métricas de los flujos: Flujo Total, Flujo Promedio y Flujo Máximo.
 
@@ -43,6 +43,7 @@ def calcularMetricasFlujos(moras: pd.DataFrame, berex: pd.DataFrame, mensualidad
         moras (pd.DataFrame): DataFrame que contiene las moras.
         berex (pd.DataFrame): DataFrame que contiene los datos de berex.
         mensualidades (pd.DataFrame): DataFrame que contiene las mensualidades.
+        filterToToday (bool): Indica si se deben filtrar los datos hasta hoy.
 
     Returns:
         Tuple[float, float, float, float, str]: Una tupla con:
@@ -53,14 +54,17 @@ def calcularMetricasFlujos(moras: pd.DataFrame, berex: pd.DataFrame, mensualidad
         - El Status de Mora del Cliente
     """
     # Filtramos los Datos a Hoy
-    morasToday, berexToday, mensualidadesToday = filterDataToToday(moras, berex, mensualidades)
+    if filterToToday:
+        morasToday, berexToday, mensualidadesToday = filterDataToToday(moras, berex, mensualidades)
+    else:
+        morasToday, berexToday, mensualidadesToday = moras, berex, mensualidades
 
     # 1. Calculamos el Pago Actual del Cliente
     # Definimos el Pago Actual del Cliente como:
     # La Suma de Pago en Moras + la suma de Monto_Mensualidad en Mensualidades si Status_Facturacio != "POR_COBRAR"
     pagoActualMoras = morasToday['Pago'].sum()
     pagoActualMensualidades = mensualidadesToday[mensualidadesToday['Status_Facturacion'] != "POR_COBRAR"]['Monto_Mensualidad'].sum()
-    pagoActualCliente = pagoActualMoras + pagoActualMensualidades
+    pagoActualCliente = pagoActualMoras # + pagoActualMensualidades
 
     # 2. Calculamos el Valor Total a Pagar por el Cliente
     # Definimos el Valor Total a Pagar por el Cliente como:
@@ -70,10 +74,10 @@ def calcularMetricasFlujos(moras: pd.DataFrame, berex: pd.DataFrame, mensualidad
     # Calculamos el Valor Total a Pagar por el Cliente
     valorTotalBerex = berexToday['Monto_Berex'].sum()
     valorTotalMensualidades = mensualidadesFiltradas['Monto_Mensualidad'].sum()
-    valorTotalPagarCliente = valorTotalBerex + valorTotalMensualidades
+    valorTotalPagarCliente = valorTotalBerex # + valorTotalMensualidades
 
     # 3. Calculamos el Número de Cuotas Pendientes (Facturas Pendientes)
-    numCuotasPendientes = len(calcularFacturasPendientes(morasToday, berexToday))
+    numCuotasPendientes = np.sum(berexToday['Saldo_Pendiente'] > 0) # Contamos el Número de Filas en el DF de berex filtrado donde el Saldo_Pendiente sea Mayor que 0
 
     # 4. Calculamos el Porcentaje de Pago del Cliente
     porcentajePago = round(pagoActualCliente / valorTotalPagarCliente * 100, 2) if valorTotalPagarCliente != 0 else 0
