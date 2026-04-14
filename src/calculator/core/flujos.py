@@ -134,8 +134,14 @@ class FlujoTotal:
         Returns:
             pd.DataFrame: Un DataFrame con las Facturas Pagadas por el Cliente
         """
-        # Solo tenemos que Filtrar el Flujo de Berex por las Facturas que Tienen Saldo_Pendiente Igual a 0, lo que Indica que el Cliente las ha Pagado
-        facturasPagadas = self.berex[self.berex['Saldo_Pendiente'] == 0].copy()
+        # Filtramos los Datos donde el Saldo_Pendiente sea menor al Monto_Berex, lo cual Indicaria un Pago
+        facturasPagadas = self.berex[self.berex['Saldo_Pendiente'] < self.berex['Monto_Berex']].copy()
+        # Ahora para las Facturas donde Saldo_Pendiente sea diferente a 0, se asigna:
+        # Monto_Berex = Monto_Berex - Saldo_Pendiente, lo que Indica el Monto que el Cliente ha Pagado de esa Factura
+        # Saldo_Pendiente = 0, lo que Indica que el Cliente ha Pagado esa Factura
+        maskPagoIncompleto = facturasPagadas['Saldo_Pendiente'] > 0
+        facturasPagadas.loc[maskPagoIncompleto, 'Monto_Berex'] = facturasPagadas.loc[maskPagoIncompleto, 'Monto_Berex'] - facturasPagadas.loc[maskPagoIncompleto, 'Saldo_Pendiente']
+        facturasPagadas.loc[maskPagoIncompleto, 'Saldo_Pendiente'] = 0
         return facturasPagadas
 
     # Método para Obtener el Monto de Berex de las Facturas No Pagadas con Destino Banco
