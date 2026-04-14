@@ -130,6 +130,8 @@ def mostrarNuevoFlujo(moras, berex, mensualidades, params):
         return # Para Evitar que se Intente Mostrar un Flujo de Berex que no se ha Calculado Correctamente
     
     # mostrarParametrosReestructura(params) # Ya incluye el Subheader
+    if flujoTotal.hasPaBPendiente():
+        st.warning("El Cliente tiene un Pago a Banco Pendiente")
 
     # Creamos 2 Tabs para realizar Comparación entre el Flujo de Berex Actual y el Nuevo Flujo de Berex después de la Reestructura
     tab1, tab2 = st.tabs(["Flujo de Berex Actual", "Nuevo Flujo de Berex Después de la Reestructura"])

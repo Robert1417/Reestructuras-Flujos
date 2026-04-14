@@ -26,6 +26,7 @@ class FlujoTotal:
 
         self.nuevoFlujo = None # Inicializamos el Nuevo Flujo como None, ya que aún no se ha calculado
         self.motivoNoViable = None # Inicializamos el Motivo de No Viabilidad como None, ya que aún no se ha evaluado la viabilidad de la reestructura
+        self.paBPendiente = False # Inicializamos la Variable de Pago al Banco Pendiente como False, ya que aún no se ha evaluado si el Pago al Banco está Pendiente o No
 
         # Método para Calcular el Valor Total Pagado por el Cliente
     @logClassWrapper(message="Error al Calcular el Monto Pagado por el Cliente", onErrorValue=0.0)
@@ -107,7 +108,7 @@ class FlujoTotal:
         # Primero Dejamos fechaCorte como el Último Día del Mes para Evitar Problemas con las Mensualidades que Tienen Fecha de Cobro a Final de Mes
         fechaCorte = fechaCorte.replace(day=1) + pd.offsets.MonthEnd(0)
         # Filtramos las Mensualidades que Tienen Fecha de Cobro Menor o Igual a la Fecha de Corte, lo que Indica que el Cliente No las ha Pagado, y Sumamos el Monto_Mensualidad de esas Mensualidades No Pagadas para Obtener el Monto Total No Pagado por el Cliente
-        mensualidadesNoPagadas = self.mensualidades[self.mensualidades['Fecha_Cobro'].dt.date() <= fechaCorte.date()]
+        mensualidadesNoPagadas = self.mensualidades[self.mensualidades['Fecha_Cobro'].dt.date <= fechaCorte.date()]
         # Ahora Filtramos las Mensualidades que Status_Facturacion == "POR_COBRAR"
         mensualidadesNoPagadas = mensualidadesNoPagadas[mensualidadesNoPagadas['Status_Facturacion'] == "POR_COBRAR"]
         montoNoPagado = mensualidadesNoPagadas['Monto_Mensualidad'].sum()
@@ -243,6 +244,9 @@ class FlujoTotal:
         # Se Calcula el Monto Pendiente Total de las Facturas No Pagadas por el Cliente, lo que Indica el Monto Total que el Cliente Aún No ha Pagado
         montoPendiente = montoBancoFacturasNoPagadas + montoComisionFacturasNoPagadas
 
+        if montoBancoFacturasNoPagadas > 0:
+            self.paBPendiente = True
+
         # Se crea una Ventana por Mes Empezando por la Fecha de Inicio de la Reestructura
         startWindowDate = fechaInicioReestructura
         currWindow = startWindowDate
@@ -337,3 +341,12 @@ class FlujoTotal:
 
         notInfiniteLog(f"nuevo_flujo_berex_{self.ref}", f"Se ha Calculado el Nuevo Flujo de Berex para la Referencia {self.ref}", method='debug')
         return self.nuevoFlujo
+    
+    # Método para saber si tiene PaB pendiente
+    def hasPaBPendiente(self) -> bool:
+        """Método para saber si tiene PaB pendiente
+
+        Returns:
+            bool: True si tiene PaB pendiente, False en caso contrario
+        """
+        return self.paBPendiente
